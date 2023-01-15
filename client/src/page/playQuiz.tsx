@@ -4,6 +4,9 @@ import axios from 'axios'
 import webSocket from 'socket.io-client'
 import {useParams} from "react-router-dom";
 import {quiz, question} from "../state";
+import Toast from 'react-bootstrap/Toast';
+import ToastContainer from 'react-bootstrap/ToastContainer';
+
 
 function PlayQuiz() {
     const [quiz, setQuiz]  = useState({} as quiz)
@@ -15,8 +18,11 @@ function PlayQuiz() {
     const [questionNum, setQuestionNum] = useState(-1)
     const [selectedAnsIndex, setSelectedAnsIndex] = useState(-1)
     const [point, setPoint] = useState(0)
+    const [joinedRoom, setJoinedRoom] = useState(false)
+    const [roomBroadcastMsg, setRoomBroadcastMsg] = useState("")
+    const [showRoomBroadcast, setShowRoomBroadcastMsg] = useState(false)
 
-    let {roomId} = useParams();
+    let {roomId} = useParams(); //get URL params
     const connectWebSocket = () => {
         setWs(webSocket('ws://localhost:3004'))
     }
@@ -29,11 +35,31 @@ function PlayQuiz() {
         }
     }, [ws])
 
+    const joinRoomMsg = () => {
+        return (
+            <h4>joined quiz room {roomId}</h4>
+        )
+    }
+
+    const roomBroadcastToast = () => {
+        return (
+            <Toast show={showRoomBroadcast} delay={3000} autohide={true} onClose={() => setShowRoomBroadcastMsg(false)}>
+                <Toast.Header>
+                    <img src="holder.js/20x20?text=%20" className="rounded me-2" alt="" />
+                    <strong className="me-auto">Room</strong>
+                    <small>11 mins ago</small>
+                </Toast.Header>
+                <Toast.Body>{roomBroadcastMsg}</Toast.Body>
+            </Toast>
+        )
+    }
+
     const initWebSocket = () => {
         ws.on('connect', () => {
             if (roomId) {
                 ws.emit('join-room', roomId);
                 console.log('join-room')
+                setJoinedRoom(true)
 
             } else {
                 ws.emit('create-room');
@@ -44,6 +70,8 @@ function PlayQuiz() {
             console.log(msg);
         });
         ws.on('room-brocast', (msg) => {
+            setRoomBroadcastMsg(msg)
+            setShowRoomBroadcastMsg(true)
             console.log(msg);
         });
         ws.on('quiz-start', (msg) => {
@@ -58,6 +86,7 @@ function PlayQuiz() {
         ws.on('next-question', (msg) => {
             setQuestionNum(msg)
         })
+
     }
 
     const startQuiz = () => {
@@ -75,8 +104,10 @@ function PlayQuiz() {
     }
 
 
+
     return (
         <div className="playQuiz">
+            {joinedRoom && joinRoomMsg()}
             <input type='button' value='connectWebSocket' onClick={connectWebSocket}/>
             <input type='button' value='quiz start' onClick={startQuiz}/>
             <select name='QuizId' value={quizId} onChange={(v) => setQuizId(v.target.value)}>
@@ -96,9 +127,12 @@ function PlayQuiz() {
             {
                 questionSet[questionNum]?.answers.map((q,index) =>
                     <><label id={q}>{q}</label>
-                        <input type="radio" id={q} name="question" value={index} onChange={()=>setSelectedAnsIndex(index)}/></>)
+                        <input type="radio" id={q} name="question" value={index} onChange={()=>setSelectedAnsIndex(index)}/>
+                        <br/>
+                    </>)
             }
             <input type='button' value='submit' onClick={submit_ans}/>
+            {roomBroadcastToast()}
         </div>
     )
 }
