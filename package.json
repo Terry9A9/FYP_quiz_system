@@ -6,19 +6,34 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start_server": "ts-node ./server/server.ts",
-    "start_client": "cd ./client && npm run start"
+    "start_client": "cd ./client && npm run dev",
+    "ss": "ts-node ./server/server.ts",
+    "sc": "cd ./client && npm run dev"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
     "@types/koa": "^2.13.5",
+    "@types/koa-bodyparser": "^4.3.10",
     "@types/koa-router": "^7.4.4",
+    "@typescript-eslint/eslint-plugin": "^5.48.1",
+    "@typescript-eslint/parser": "^5.48.1",
+    "eslint": "^8.31.0",
+    "eslint-plugin-react": "^7.31.11",
     "ts-node": "^10.9.1",
     "typescript": "^4.9.4"
   },
   "dependencies": {
+    "@koa/cors": "^4.0.0",
+    "@socket.io/admin-ui": "^0.5.1",
+    "create-vite-app": "^1.21.0",
     "koa": "^2.14.1",
-    "koa-router": "^12.0.0"
+    "koa-bodyparser": "^4.3.0",
+    "koa-router": "^12.0.0",
+    "socket.io": "^4.5.4",
+    "uuid": "^9.0.0",
+    "ws": "^8.12.0",
+    "yarn": "^1.22.19"
   }
 }
