@@ -19,8 +19,8 @@ function PlayQuiz() {
     const [selectedAnsIndex, setSelectedAnsIndex] = useState(-1)
     const [point, setPoint] = useState(0)
     const [joinedRoom, setJoinedRoom] = useState(false)
-    const [roomBroadcastMsg, setRoomBroadcastMsg] = useState("")
-    const [showRoomBroadcast, setShowRoomBroadcastMsg] = useState(false)
+    const [roomMsg, setRoomMsg] = useState("")
+    const [showRoomMsg, setShowRoomMsg] = useState(false)
 
     let {roomId} = useParams(); //get URL params
     const connectWebSocket = () => {
@@ -43,14 +43,16 @@ function PlayQuiz() {
 
     const roomBroadcastToast = () => {
         return (
-            <Toast show={showRoomBroadcast} delay={3000} autohide={true} onClose={() => setShowRoomBroadcastMsg(false)}>
-                <Toast.Header>
-                    <img src="holder.js/20x20?text=%20" className="rounded me-2" alt="" />
-                    <strong className="me-auto">Room</strong>
-                    <small>11 mins ago</small>
-                </Toast.Header>
-                <Toast.Body>{roomBroadcastMsg}</Toast.Body>
-            </Toast>
+            <ToastContainer>
+                <Toast show={showRoomMsg} delay={3000} autohide={true} onClose={() => setShowRoomMsg(false)}>
+                    <Toast.Header>
+                        <img src="holder.js/20x20?text=%20" className="rounded me-2" alt="" />
+                        <strong className="me-auto">Room</strong>
+                        <small>11 mins ago</small>
+                    </Toast.Header>
+                    <Toast.Body>{roomMsg}</Toast.Body>
+                </Toast>
+            </ToastContainer>
         )
     }
 
@@ -70,8 +72,8 @@ function PlayQuiz() {
             console.log(msg);
         });
         ws.on('room-brocast', (msg) => {
-            setRoomBroadcastMsg(msg)
-            setShowRoomBroadcastMsg(true)
+            setRoomMsg(msg)
+            setShowRoomMsg(true)
             console.log(msg);
         });
         ws.on('quiz-start', (msg) => {
@@ -103,10 +105,20 @@ function PlayQuiz() {
         }
     }
 
+    const mouseLeave = () => {
+        setRoomMsg("mouse Leave!!")
+        setShowRoomMsg(true)
+    }
+
+    const mouseEnter = () => {
+        setRoomMsg("mouse Enter!!")
+        setShowRoomMsg(true)
+    }
+
 
 
     return (
-        <div className="playQuiz">
+        <div className="playQuiz" onMouseLeave={mouseLeave} onMouseEnter={mouseEnter}>
             {joinedRoom && joinRoomMsg()}
             <input type='button' value='connectWebSocket' onClick={connectWebSocket}/>
             <input type='button' value='quiz start' onClick={startQuiz}/>
