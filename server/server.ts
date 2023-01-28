@@ -2,7 +2,6 @@ import Koa from 'koa';
 import Router from 'koa-router';
 import bodyparser from 'koa-bodyparser';
 import { instrument } from"@socket.io/admin-ui";
-
 const cors = require('@koa/cors');
 import {v5 as uuid} from 'uuid';
 
@@ -18,6 +17,10 @@ app.use(async (ctx, next) => {
     await next();
 });
 
+type stuProfile = {
+    socketId: string,
+    totalPoint: number
+}
 
 router.get('/api/play/quiz/:quizId', async ctx => {
     let quiz_id = ctx.params
@@ -78,7 +81,11 @@ instrument(io, {
     auth: false
 });
 
+let rank = {}
+let rankPointArr : stuProfile[] = []
+
 io.on('connect', async (socket) => {
+
     socket.on('join-room', (roomId) => {
         socket.join(roomId);
         socket.emit('join-room-message', `You've join ${roomId} room`);
@@ -96,20 +103,45 @@ io.on('connect', async (socket) => {
         //io.sockets.to(roomId).emit('quiz', quiz);
         io.sockets.to(roomId).emit('quiz-start', quiz);
         io.sockets.to(roomId).emit('timerStatus', {status: true , time: quiz.time});
-        // setTimeout(()=>{
-        //         io.sockets.to(roomId).emit('timerStatus', false);
-        //         console.log('end_timer')
-        //     }, quiz.time*1000)
+        setTimeout(()=>{
+                io.sockets.to(roomId).emit('timerStatus', {status: false , time: 0});
+                console.log('end_timer')
+            }, quiz.time)
     })
-    socket.on('next-question', ({roomId:roomId, questionNum:questionNum}) => {
+    socket.on('next-question', ({roomId:roomId, questionNum:questionNum, quizId: quizId}) => {
+        let quiz = findQuiz(quizId)
         io.sockets.to(roomId).emit('next-question', questionNum);
+        io.sockets.to(roomId).emit('timerStatus', {status: true , time: quiz.time});
+        setTimeout(()=>{
+            io.sockets.to(roomId).emit('timerStatus', {status: false , time: 0});
+            console.log('end_timer')
+        }, quiz.time)
     })
 
+    socket.on('ans_submit', ({questionNum: questionNum, quizId: quizId, ans: selectedAnsIndex, roomId: roomId}) => {
+        let quiz = findQuiz(quizId)
+        if (quiz.questionSet[questionNum].correct == selectedAnsIndex){
+            socket.emit('point', quiz.questionSet[questionNum].point);
+        }
+    })
+
+    socket.on('point_submit', ({roomId: roomId, totalPoint: totalPoint}) => {
+        let data = {socketId: socket.id, totalPoint: totalPoint}
+        let rankIndex = rankPointArr.findIndex((e:{socketId:string}) => e.socketId === socket.id)
+        if ( rankIndex != -1){
+            rankPointArr[rankIndex] = data
+        }else{
+            rankPointArr.push(data)
+        }
+        rank[roomId] = rankPointArr
+        rank[roomId].sort((a,b)=> b.totalPoint - a.totalPoint)
+        io.sockets.to(roomId).emit('show-rank', {status: true , info: rank[roomId]});
+        console.log(JSON.stringify(rank).toString())
+    })
 })
 
 
 const findQuiz = (quizId) => {
-
     let quiz =
         {
             quiz_id: "84532",
@@ -117,30 +149,44 @@ const findQuiz = (quizId) => {
             course: "COMP333",
             start_date: "2023-01-11T05:52:49.508Z",
             end_date: "2023-01-13T05:52:49.508Z",
-            time: 10000,
+            time: 10000, //ms
             mc: true,
             random: true,
             questionSet: [
                 {
-                    point:10,
+                    point:250,
                     question: "when have grade ar",
                     img: "",
                     answers: ["11/1", "12/1", "13/1", "14/1"],
                     correct: 1
                 },
                 {
-                    point:10,
+                    point:200,
                     question: "when2",
                     img: "",
                     answers: ["have", "grade", "ar"],
-                    correct: 3
+                    correct: 2
                 },
                 {
-                    point:10,
+                    point:100,
                     question: "when3",
                     img: "",
                     answers: ["have", "grade", "ar", "ar"],
-                    correct: 4
+                    correct: 3
+                },
+                {
+                    point:100,
+                    question: "when4",
+                    img: "",
+                    answers: ["have", "grade", "ar", "ar"],
+                    correct: 3
+                },
+                {
+                    point:100,
+                    question: "when5",
+                    img: "",
+                    answers: ["have", "grade", "ar", "ar"],
+                    correct: 3
                 },
             ]
         }
