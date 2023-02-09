@@ -4,11 +4,18 @@ import bodyparser from 'koa-bodyparser';
 import { instrument } from"@socket.io/admin-ui";
 const cors = require('@koa/cors');
 import {v5 as uuid} from 'uuid';
+import {quiz} from 'client/src/state';
 
 
 const app = new Koa();
 const router = new Router();
 const port: number = 3004;
+
+const MongoClient = require('mongodb').MongoClient;
+const ObjectID = require('mongodb').ObjectID;
+const mongourl = 'mongodb+srv://FYP:123@cluster0.oxp1vse.mongodb.net/?retryWrites=true&w=majority';
+const dbName = 'FYP_DATA';
+const assert = require('assert');
 
 app.use(bodyparser());
 app.use(cors());
@@ -109,7 +116,7 @@ io.on('connect', async (socket) => {
             }, quiz.time)
     })
     socket.on('next-question', ({roomId:roomId, questionNum:questionNum, quizId: quizId}) => {
-        let quiz = findQuiz(quizId)
+        let quiz = findQuiz(quizId) as quiz
         io.sockets.to(roomId).emit('next-question', questionNum);
         io.sockets.to(roomId).emit('timerStatus', {status: true , time: quiz.time});
         setTimeout(()=>{
@@ -142,6 +149,14 @@ io.on('connect', async (socket) => {
 
 
 const findQuiz = (quizId) => {
+
+    const client = new MongoClient(mongourl);
+	client.connect((err) => {
+		assert.equal(null, err);
+		console.log("Connected successfully to mongoDB");
+		const db = client.db(dbName);
+    });
+    
     let quiz =
         {
             quiz_id: "84532",
