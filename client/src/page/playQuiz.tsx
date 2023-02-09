@@ -1,4 +1,4 @@
-import React from 'react'
+import * as React from 'react';
 import {useState, useEffect} from 'react'
 import axios from 'axios'
 import webSocket from 'socket.io-client'
@@ -7,8 +7,31 @@ import {quiz, profile} from "../state";
 import Toast from 'react-bootstrap/Toast';
 import ToastContainer from 'react-bootstrap/ToastContainer';
 import {Container, Row, Col} from 'react-bootstrap';
-import {Simulate} from "react-dom/test-utils";
+import { makeStyles } from 'tss-react/mui';
+import {Button, Snackbar, InputLabel, MenuItem, Select, FormControl, RadioGroup} from '@mui/material';
+import MuiAlert, { AlertProps } from '@mui/material/Alert';
 
+const useStyles = makeStyles()((theme) => {
+    return {
+        root: {
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            marginTop: '100px'
+        }
+        ,
+        textField: {
+            margin: '20px 0'
+        }
+    }
+});
+
+const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(
+    props,
+    ref,
+) {
+    return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
+});
 
 function PlayQuiz() {
     const [quiz, setQuiz] = useState({} as quiz)
@@ -28,7 +51,9 @@ function PlayQuiz() {
     const [showRank, setShowRank] = useState(false)
     const [rankInfo, setRankInfo] = useState([] as profile[])
 
+    const {classes} = useStyles();
     let {roomId} = useParams(); //get URL params
+
     const connectWebSocket = () => {
         setWs(webSocket('ws://localhost:3004'))
     }
@@ -60,16 +85,11 @@ function PlayQuiz() {
 
     function RoomBroadcastToast() { //react component
         return (
-            <ToastContainer>
-                <Toast show={showRoomMsg} delay={3000} autohide={true} onClose={() => setShowRoomMsg(false)}>
-                    <Toast.Header>
-                        <img src="holder.js/20x20?text=%20" className="rounded me-2" alt=""/>
-                        <strong className="me-auto">Room</strong>
-                        <small>11 mins ago</small>
-                    </Toast.Header>
-                    <Toast.Body>{roomMsg}</Toast.Body>
-                </Toast>
-            </ToastContainer>
+            <Snackbar open={showRoomMsg} autoHideDuration={6000} onClose={() => setShowRoomMsg(false)}>
+                <Alert onClose={() => setShowRoomMsg(false)} severity="success" color="info" sx={{ width: '100%' }}>
+                    {roomMsg}
+                </Alert>
+            </Snackbar>
         )
     }
 
@@ -125,7 +145,9 @@ function PlayQuiz() {
                 </Row>
                 <Row>
                     <Col>
-                        <input type='button' value='submit' onClick={submit_ans}/>
+                        <Button variant="contained" color="primary" onClick={submit_ans}>
+                            GO
+                        </Button>
                         <RoomBroadcastToast/>
                     </Col>
                 </Row>
@@ -220,13 +242,13 @@ function PlayQuiz() {
         )
     }
 
-    const mouseLeave = () => {
+    const handleMouseLeave = () => {
         setRoomMsg("mouse Leave!!")
         setShowRoomMsg(true)
         console.log("mouse Leave!!")
     }
 
-    const mouseEnter = () => {
+    const handleMouseEnter = () => {
         setRoomMsg("mouse Enter!!")
         setShowRoomMsg(true)
         console.log("mouse Enter!!")
@@ -234,33 +256,47 @@ function PlayQuiz() {
 
 
     return (
-        <div className="playQuiz" onMouseLeave={() => mouseLeave()} onMouseEnter={() => mouseEnter()} tabIndex={0}
+        <div className={classes.root} onMouseLeave={() => handleMouseLeave()} onMouseEnter={() => handleMouseEnter()} tabIndex={0}
              style={{height: "100vh", margin: "3vh"}}>
+            <meta name="viewport" content="initial-scale=1, width=device-width" />
             <Container>
                 <Row>
                     {joinedRoom && joinRoomMsg()}
                 </Row>
                 <Row>
                     <Col>
-                        <input type='button' value='connectWebSocket' onClick={connectWebSocket}/>
+                        <Button variant="contained" color="primary" onClick={connectWebSocket}>
+                            Connect WebSocket
+                        </Button>
                     </Col>
                     <Col>
-                        <input type='button' value='quiz start' onClick={startQuiz}/>
+                        <Button variant="contained" color="primary" onClick={startQuiz}>
+                            Quiz Start
+                        </Button>
                     </Col>
                     <Col>
-                        <select name='QuizId' value={quizId} onChange={(v) => setQuizId(v.target.value)}>
-                            <option value=""></option>
-                            <option value="5671">390test1</option>
-                            <option value="0786">333test3</option>
-                            <option value="2347">390test2</option>
-                            <option value="4590">390test3</option>
-                        </select>
+                        <FormControl fullWidth>
+                            <InputLabel id="QuizId">QuizId</InputLabel>
+                            <Select
+                                labelId="QuizId"
+                                id="QuizId-select"
+                                value={quizId}
+                                label="Age"
+                                onChange={(v) => setQuizId(v.target.value)}
+                            >
+                                <MenuItem value=""></MenuItem>
+                                <MenuItem value="5671">390test1</MenuItem>
+                                <MenuItem value="0786">333test3</MenuItem>
+                                <MenuItem value="2347">390test2</MenuItem>
+                                <MenuItem value="4590">390test3</MenuItem>
+                            </Select>
+                        </FormControl>
                     </Col>
                 </Row>
                 <Row>
                     <Col>
                         {questionNum + 1 < questionSet?.length ?
-                            <input type='button' value='next question' onClick={nextQuestion}/> : " "}
+                            <Button variant="contained" color="primary" onClick={nextQuestion}>next question</Button> : " "}
                     </Col>
                 </Row>
                 <Row>
