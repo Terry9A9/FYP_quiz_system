@@ -182,7 +182,7 @@ const findQuiz = (quizId) => {
                     correct: 3
                 },
                 {
-                    point:100,
+                    point:300,
                     question: "when5",
                     img: "",
                     answers: ["have", "grade", "ar", "ar"],

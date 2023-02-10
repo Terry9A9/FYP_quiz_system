@@ -34,22 +34,34 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(
 });
 
 function PlayQuiz() {
-    const [quiz, setQuiz] = useState({} as quiz)
     const [ws, setWs] = useState()
-    const [course, setCourse] = useState("")
-    const [times, setTimes] = useState(-1)
-    const [timerStatus, setTimerStatus] = useState(false)
+
+    //store quiz related
+    const [quiz, setQuiz] = useState({} as quiz)
+    const [course, setCourse] = useState("" as string)
     const [questionSet, setQuestionSet] = useState([] as quiz["questionSet"])
-    const [quizId, setQuizId] = useState("")
-    const [questionNum, setQuestionNum] = useState(-1)
-    const [selectedAnsIndex, setSelectedAnsIndex] = useState(-1)
-    const [totalPoint, setTotalPoint] = useState(0)
-    const [joinedRoom, setJoinedRoom] = useState(false)
-    const [roomMsg, setRoomMsg] = useState("")
-    const [showRoomMsg, setShowRoomMsg] = useState(false)
-    const [waitMsg, setWaitMsg] = useState(false)
-    const [showRank, setShowRank] = useState(false)
+    const [quizId, setQuizId] = useState("" as string)
+    const [questionNum, setQuestionNum] = useState(-1 as number)
+
+    //ans & ranking
+    const [selectedAnsIndex, setSelectedAnsIndex] = useState(-1 as number)
+    const [totalPoint, setTotalPoint] = useState(0 as number)
+    const [showRank, setShowRank] = useState(false as boolean)
     const [rankInfo, setRankInfo] = useState([] as profile[])
+    const [waitMsg, setWaitMsg] = useState(false as boolean)
+
+    //sync timer
+    const [times, setTimes] = useState(-1 as number)
+    const [timerStatus, setTimerStatus] = useState(false as boolean)
+   
+    //websocket room & Msg
+    const [joinedRoom, setJoinedRoom] = useState(false as boolean)
+    const [roomMsg, setRoomMsg] = useState("" as string)
+    const [showRoomMsg, setShowRoomMsg] = useState(false as boolean)
+    
+    //anit cheating
+    const [mouseMsg, setMouseMsg] = useState("" as string)
+
 
     const {classes} = useStyles();
     let {roomId} = useParams(); //get URL params
@@ -85,7 +97,7 @@ function PlayQuiz() {
 
     function RoomBroadcastToast() { //react component
         return (
-            <Snackbar open={showRoomMsg} autoHideDuration={6000} onClose={() => setShowRoomMsg(false)}>
+            <Snackbar open={showRoomMsg} autoHideDuration={2000} onClose={() => setShowRoomMsg(false)}>
                 <Alert onClose={() => setShowRoomMsg(false)} severity="success" color="info" sx={{ width: '100%' }}>
                     {roomMsg}
                 </Alert>
@@ -146,9 +158,8 @@ function PlayQuiz() {
                 <Row>
                     <Col>
                         <Button variant="contained" color="primary" onClick={submit_ans}>
-                            GO
+                            Submit
                         </Button>
-                        <RoomBroadcastToast/>
                     </Col>
                 </Row>
             </>
@@ -243,14 +254,12 @@ function PlayQuiz() {
     }
 
     const handleMouseLeave = () => {
-        setRoomMsg("mouse Leave!!")
-        setShowRoomMsg(true)
+        setMouseMsg("mouse Leave!!")
         console.log("mouse Leave!!")
     }
 
     const handleMouseEnter = () => {
-        setRoomMsg("mouse Enter!!")
-        setShowRoomMsg(true)
+        setMouseMsg("mouse Enter!!")
         console.log("mouse Enter!!")
     }
 
@@ -293,6 +302,7 @@ function PlayQuiz() {
                         </FormControl>
                     </Col>
                 </Row>
+                <br/>
                 <Row>
                     <Col>
                         {questionNum + 1 < questionSet?.length ?
@@ -302,7 +312,10 @@ function PlayQuiz() {
                 <Row>
                     {waitMsg ? <WaitCountDown/> : showRank? <Rank/> : <QuestionComponent/>}
                 </Row>
+                <br/>
+                {mouseMsg}
             </Container>
+            <RoomBroadcastToast/>
         </div>
     )
 }
