@@ -1,4 +1,4 @@
-import React from 'react'
+import * as React from 'react';
 import {useState, useEffect} from 'react'
 import axios from 'axios'
 import webSocket from 'socket.io-client'
@@ -7,28 +7,65 @@ import {quiz, profile} from "../state";
 import Toast from 'react-bootstrap/Toast';
 import ToastContainer from 'react-bootstrap/ToastContainer';
 import {Container, Row, Col} from 'react-bootstrap';
-import {Simulate} from "react-dom/test-utils";
+import { makeStyles } from 'tss-react/mui';
+import {Button, Snackbar, InputLabel, MenuItem, Select, FormControl, RadioGroup} from '@mui/material';
+import MuiAlert, { AlertProps } from '@mui/material/Alert';
 
+const useStyles = makeStyles()((theme) => {
+    return {
+        root: {
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            marginTop: '100px'
+        }
+        ,
+        textField: {
+            margin: '20px 0'
+        }
+    }
+});
+
+const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(
+    props,
+    ref,
+) {
+    return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
+});
 
 function PlayQuiz() {
-    const [quiz, setQuiz] = useState({} as quiz)
     const [ws, setWs] = useState()
-    const [course, setCourse] = useState("")
-    const [times, setTimes] = useState(-1)
-    const [timerStatus, setTimerStatus] = useState(false)
-    const [questionSet, setQuestionSet] = useState([] as quiz["questionSet"])
-    const [quizId, setQuizId] = useState("")
-    const [questionNum, setQuestionNum] = useState(-1)
-    const [selectedAnsIndex, setSelectedAnsIndex] = useState(-1)
-    const [totalPoint, setTotalPoint] = useState(0)
-    const [joinedRoom, setJoinedRoom] = useState(false)
-    const [roomMsg, setRoomMsg] = useState("")
-    const [showRoomMsg, setShowRoomMsg] = useState(false)
-    const [waitMsg, setWaitMsg] = useState(false)
-    const [showRank, setShowRank] = useState(false)
-    const [rankInfo, setRankInfo] = useState([] as profile[])
 
+    //store quiz related
+    const [quiz, setQuiz] = useState({} as quiz)
+    const [course, setCourse] = useState("" as string)
+    const [questionSet, setQuestionSet] = useState([] as quiz["questionSet"])
+    const [quizId, setQuizId] = useState("" as string)
+    const [questionNum, setQuestionNum] = useState(-1 as number)
+
+    //ans & ranking
+    const [selectedAnsIndex, setSelectedAnsIndex] = useState(-1 as number)
+    const [totalPoint, setTotalPoint] = useState(0 as number)
+    const [showRank, setShowRank] = useState(false as boolean)
+    const [rankInfo, setRankInfo] = useState([] as profile[])
+    const [waitMsg, setWaitMsg] = useState(false as boolean)
+
+    //sync timer
+    const [times, setTimes] = useState(-1 as number)
+    const [timerStatus, setTimerStatus] = useState(false as boolean)
+   
+    //websocket room & Msg
+    const [joinedRoom, setJoinedRoom] = useState(false as boolean)
+    const [roomMsg, setRoomMsg] = useState("" as string)
+    const [showRoomMsg, setShowRoomMsg] = useState(false as boolean)
+    
+    //anit cheating
+    const [mouseMsg, setMouseMsg] = useState("" as string)
+
+
+    const {classes} = useStyles();
     let {roomId} = useParams(); //get URL params
+
     const connectWebSocket = () => {
         setWs(webSocket('ws://localhost:3004'))
     }
@@ -60,16 +97,11 @@ function PlayQuiz() {
 
     function RoomBroadcastToast() { //react component
         return (
-            <ToastContainer>
-                <Toast show={showRoomMsg} delay={3000} autohide={true} onClose={() => setShowRoomMsg(false)}>
-                    <Toast.Header>
-                        <img src="holder.js/20x20?text=%20" className="rounded me-2" alt=""/>
-                        <strong className="me-auto">Room</strong>
-                        <small>11 mins ago</small>
-                    </Toast.Header>
-                    <Toast.Body>{roomMsg}</Toast.Body>
-                </Toast>
-            </ToastContainer>
+            <Snackbar open={showRoomMsg} autoHideDuration={2000} onClose={() => setShowRoomMsg(false)}>
+                <Alert onClose={() => setShowRoomMsg(false)} severity="success" color="info" sx={{ width: '100%' }}>
+                    {roomMsg}
+                </Alert>
+            </Snackbar>
         )
     }
 
@@ -125,8 +157,9 @@ function PlayQuiz() {
                 </Row>
                 <Row>
                     <Col>
-                        <input type='button' value='submit' onClick={submit_ans}/>
-                        <RoomBroadcastToast/>
+                        <Button variant="contained" color="primary" onClick={submit_ans}>
+                            Submit
+                        </Button>
                     </Col>
                 </Row>
             </>
@@ -220,53 +253,69 @@ function PlayQuiz() {
         )
     }
 
-    const mouseLeave = () => {
-        setRoomMsg("mouse Leave!!")
-        setShowRoomMsg(true)
+    const handleMouseLeave = () => {
+        setMouseMsg("mouse Leave!!")
         console.log("mouse Leave!!")
     }
 
-    const mouseEnter = () => {
-        setRoomMsg("mouse Enter!!")
-        setShowRoomMsg(true)
+    const handleMouseEnter = () => {
+        setMouseMsg("mouse Enter!!")
         console.log("mouse Enter!!")
     }
 
 
     return (
-        <div className="playQuiz" onMouseLeave={() => mouseLeave()} onMouseEnter={() => mouseEnter()} tabIndex={0}
+        <div className={classes.root} onMouseLeave={() => handleMouseLeave()} onMouseEnter={() => handleMouseEnter()} tabIndex={0}
              style={{height: "100vh", margin: "3vh"}}>
+            <meta name="viewport" content="initial-scale=1, width=device-width" />
             <Container>
                 <Row>
                     {joinedRoom && joinRoomMsg()}
                 </Row>
                 <Row>
                     <Col>
-                        <input type='button' value='connectWebSocket' onClick={connectWebSocket}/>
+                        <Button variant="contained" color="primary" onClick={connectWebSocket}>
+                            Connect WebSocket
+                        </Button>
                     </Col>
                     <Col>
-                        <input type='button' value='quiz start' onClick={startQuiz}/>
+                        <Button variant="contained" color="primary" onClick={startQuiz}>
+                            Quiz Start
+                        </Button>
                     </Col>
                     <Col>
-                        <select name='QuizId' value={quizId} onChange={(v) => setQuizId(v.target.value)}>
-                            <option value=""></option>
-                            <option value="5671">390test1</option>
-                            <option value="0786">333test3</option>
-                            <option value="2347">390test2</option>
-                            <option value="4590">390test3</option>
-                        </select>
+                        <FormControl fullWidth>
+                            <InputLabel id="QuizId">QuizId</InputLabel>
+                            <Select
+                                labelId="QuizId"
+                                id="QuizId-select"
+                                value={quizId}
+                                label="Age"
+                                onChange={(v) => setQuizId(v.target.value)}
+                            >
+                                <MenuItem value=""></MenuItem>
+                                <MenuItem value="5671">390test1</MenuItem>
+                                <MenuItem value="0786">333test3</MenuItem>
+                                <MenuItem value="2347">390test2</MenuItem>
+                                <MenuItem value="4590">390test3</MenuItem>
+                            </Select>
+                        </FormControl>
                     </Col>
                 </Row>
+                <br/>
                 <Row>
                     <Col>
                         {questionNum + 1 < questionSet?.length ?
-                            <input type='button' value='next question' onClick={nextQuestion}/> : " "}
+                            <Button variant="contained" color="primary" onClick={nextQuestion}>next question</Button> : " "}
                     </Col>
                 </Row>
                 <Row>
                     {waitMsg ? <WaitCountDown/> : showRank? <Rank/> : <QuestionComponent/>}
                 </Row>
+                <br/>
+                {mouseMsg}
             </Container>
+            <RoomBroadcastToast/>
         </div>
     )
 }
