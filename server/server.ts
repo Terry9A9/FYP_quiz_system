@@ -4,7 +4,13 @@ import bodyparser from 'koa-bodyparser';
 import { instrument } from"@socket.io/admin-ui";
 const cors = require('@koa/cors');
 import {v5 as uuid} from 'uuid';
+import {quiz} from "../client/src/state"
 
+const MongoClient = require('mongodb').MongoClient;
+const ObjectID = require('mongodb').ObjectID;
+const mongourl = 'mongodb+srv://FYP:123@cluster0.oxp1vse.mongodb.net/?retryWrites=true&w=majority';
+const dbName = 'FYP_DATA';
+const assert = require('assert');
 
 const app = new Koa();
 const router = new Router();
@@ -98,7 +104,7 @@ io.on('connect', async (socket) => {
         io.to(roomId).emit('room-brocast', `${socket.id} has join this room`);
     })
     socket.on('quiz-start', ({roomId:roomId, quizId:quizId}) => {
-        let quiz = findQuiz(quizId)
+        let quiz = findQuiz(quizId) as quiz
         io.sockets.to(roomId).emit('room-brocast', `Quiz start`);
         //io.sockets.to(roomId).emit('quiz', quiz);
         io.sockets.to(roomId).emit('quiz-start', quiz);
@@ -109,7 +115,7 @@ io.on('connect', async (socket) => {
             }, quiz.time)
     })
     socket.on('next-question', ({roomId:roomId, questionNum:questionNum, quizId: quizId}) => {
-        let quiz = findQuiz(quizId)
+        let quiz = findQuiz(quizId) as quiz
         io.sockets.to(roomId).emit('next-question', questionNum);
         io.sockets.to(roomId).emit('timerStatus', {status: true , time: quiz.time});
         setTimeout(()=>{
@@ -119,7 +125,7 @@ io.on('connect', async (socket) => {
     })
 
     socket.on('ans_submit', ({questionNum: questionNum, quizId: quizId, ans: selectedAnsIndex, roomId: roomId}) => {
-        let quiz = findQuiz(quizId)
+        let quiz = findQuiz(quizId) as quiz
         if (quiz.questionSet[questionNum].correct == selectedAnsIndex){
             socket.emit('point', quiz.questionSet[questionNum].point);
         }
@@ -140,57 +146,31 @@ io.on('connect', async (socket) => {
     })
 })
 
-
 const findQuiz = (quizId) => {
-    let quiz =
-        {
-            quiz_id: "84532",
-            created_by: "terry",
-            course: "COMP333",
-            start_date: "2023-01-11T05:52:49.508Z",
-            end_date: "2023-01-13T05:52:49.508Z",
-            time: 10000, //ms
-            mc: true,
-            random: true,
-            questionSet: [
-                {
-                    point:250,
-                    question: "when have grade ar",
-                    img: "",
-                    answers: ["11/1", "12/1", "13/1", "14/1"],
-                    correct: 1
-                },
-                {
-                    point:200,
-                    question: "when2",
-                    img: "",
-                    answers: ["have", "grade", "ar"],
-                    correct: 2
-                },
-                {
-                    point:100,
-                    question: "when3",
-                    img: "",
-                    answers: ["have", "grade", "ar", "ar"],
-                    correct: 3
-                },
-                {
-                    point:100,
-                    question: "when4",
-                    img: "",
-                    answers: ["have", "grade", "ar", "ar"],
-                    correct: 3
-                },
-                {
-                    point:100,
-                    question: "when5",
-                    img: "",
-                    answers: ["have", "grade", "ar", "ar"],
-                    correct: 3
-                },
-            ]
-        }
-    return quiz
+    //connect to mongoDB
+    const client = new MongoClient(mongourl);
+    var quizdata = {}
+    client.connect((err) => {
+        assert.equal(null, err);
+        console.log("Connected successfully to mongoDB");
+        const db = client.db(dbName);
+
+        //find quiz with passing the search criteria
+        console.log(`finding quiz...`);
+        let DOCID = {};
+		DOCID['_id'] = '63df677c25278606dc2881f5';
+
+        let cursor = db.collection('Quiz').find({title: "test1"});
+        console.log(`findDocument: ${JSON.stringify(DOCID)}`);
+        cursor.toArray((err,quizdata) => {
+            assert.equal(err,null);
+            console.log(`Number Of Document Found: ${quizdata.length}`);
+        });
+        console.log(`quiz: ${JSON.stringify(quizdata)}`);
+        client.close();
+        console.log("Close DB connection");
+    });
+    return quizdata
 }
 
 
