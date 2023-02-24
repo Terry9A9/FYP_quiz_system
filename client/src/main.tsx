@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import PlayQuiz from "./page/playQuiz"
 import EnterRoomId from "./page/selectQuizRoom"
+import Cheat from "./page/cheat"
 import 'bootstrap/dist/css/bootstrap.css';
 
 const router = createBrowserRouter([
@@ -13,7 +14,11 @@ const router = createBrowserRouter([
   {
     path: "/",
     element: <EnterRoomId/>,
-  },
+  },{
+    path: "/a",
+    element: <Cheat/>,
+
+  }
 ]);
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(

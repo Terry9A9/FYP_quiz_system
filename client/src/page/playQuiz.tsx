@@ -16,8 +16,7 @@ const useStyles = makeStyles()((theme) => {
         root: {
             display: 'flex',
             flexDirection: 'column',
-            alignItems: 'center',
-            marginTop: '100px'
+            alignItems: 'center'
         }
         ,
         textField: {
@@ -42,6 +41,7 @@ function PlayQuiz() {
     const [questionSet, setQuestionSet] = useState([] as quiz["questionSet"])
     const [quizId, setQuizId] = useState("" as string)
     const [questionNum, setQuestionNum] = useState(-1 as number)
+    const [IsStart, setIsStart] = useState(false as boolean)
 
     //ans & ranking
     const [selectedAnsIndex, setSelectedAnsIndex] = useState(-1 as number)
@@ -197,6 +197,8 @@ function PlayQuiz() {
             setQuiz(msg)
             setQuestionSet(msg.questionSet)
             setQuestionNum(0)
+            setIsStart(true)
+
         });
         ws.on('timerStatus', (msg: { status: boolean, time: number }) => {
             setTimerStatus(msg.status)
@@ -254,11 +256,14 @@ function PlayQuiz() {
     }
 
     const handleMouseLeave = () => {
+        let infoModal=document.querySelector("#infoModal");
+        IsStart ? infoModal.showModal():
         setMouseMsg("mouse Leave!!")
         console.log("mouse Leave!!")
     }
 
     const handleMouseEnter = () => {
+        IsStart ? infoModal.close():
         setMouseMsg("mouse Enter!!")
         console.log("mouse Enter!!")
     }
@@ -266,7 +271,7 @@ function PlayQuiz() {
 
     return (
         <div className={classes.root} onMouseLeave={() => handleMouseLeave()} onMouseEnter={() => handleMouseEnter()} tabIndex={0}
-             style={{height: "100vh", margin: "3vh"}}>
+             style={{height: "100vh"}}>
             <meta name="viewport" content="initial-scale=1, width=device-width" />
             <Container>
                 <Row>
@@ -312,8 +317,10 @@ function PlayQuiz() {
                 <Row>
                     {waitMsg ? <WaitCountDown/> : showRank? <Rank/> : <QuestionComponent/>}
                 </Row>
-                <br/>
                 {mouseMsg}
+                <dialog id="infoModal"style={{height: "100%",width:'100%'}} >
+            <p>屌你</p>
+            </dialog>
             </Container>
             <RoomBroadcastToast/>
         </div>
