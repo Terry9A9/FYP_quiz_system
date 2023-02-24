@@ -61,6 +61,8 @@ function PlayQuiz() {
     
     //anit cheating
     const [mouseMsg, setMouseMsg] = useState("" as string)
+    const [OutCount,setOutCount] = useState(0 as number)
+    const [OutTime,setOutTime] = useState(0 as number)
 
 
     const {classes} = useStyles();
@@ -319,7 +321,7 @@ function PlayQuiz() {
                 </Row>
                 {mouseMsg}
                 <dialog id="infoModal"style={{height: "100%",width:'100%'}} >
-            <p>屌你</p>
+            <p>Your Are Out</p>
             </dialog>
             </Container>
             <RoomBroadcastToast/>

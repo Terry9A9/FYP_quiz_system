@@ -29,10 +29,16 @@ const useStyles = makeStyles()((theme) => {
 const cheat = () =>{
     const {classes} = useStyles();
     const [mouseMsg, setMouseMsg] = useState("" as string)
+    const [OutCount,setOutCount] = useState(0 as number)
+    const [OutTime,setOutTime] = useState(0 as number)
+    const confirmBtn = document.getElementById("close_dialog");
+    const asd = setInterval(function() {setOutTime(OutTime+1)}, 1000)
+    return () => clearInterval(asd);
     const handleMouseLeave = () => {
     document.querySelector("#show");
     let infoModal=document.querySelector("#infoModal");
         infoModal.showModal();
+        setOutCount(OutCount+1)
         setMouseMsg("mouse Leave!!")
         console.log("mouse Leave!!")
     }
@@ -47,7 +53,7 @@ return (
          style={{height: "100vh"}}>
         <meta name="viewport" content="initial-scale=1, width=device-width" />
         <Container>
-            {mouseMsg}
+            {mouseMsg}{OutCount}{OutTime}
             <br/>
             <dialog id="infoModal"style={{height: "100%",width:'100%'}} >
             <p>屌你</p>
