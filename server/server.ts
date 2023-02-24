@@ -146,6 +146,16 @@ io.on('connect', async (socket) => {
     })
 })
 
+const getQuiz = (db, criteria, callback) => {
+    let cursor = db.collection('Quiz').find(criteria);
+    console.log(`findDocument: ${JSON.stringify(criteria)}`);
+    cursor.toArray((err,quizdata) => {
+        assert.equal(err,null);
+        console.log(`Number Of Document Found: ${quizdata.length}`);
+        callback(quizdata);
+    });
+}
+
 const findQuiz = (quizId) => {
     //connect to mongoDB
     const client = new MongoClient(mongourl);
@@ -158,17 +168,13 @@ const findQuiz = (quizId) => {
         //find quiz with passing the search criteria
         console.log(`finding quiz...`);
         let DOCID = {};
-		DOCID['_id'] = '63df677c25278606dc2881f5';
+        DOCID['_id'] = ObjectID('63df677c25278606dc2881f5');
 
-        let cursor = db.collection('Quiz').find({title: "test1"});
-        console.log(`findDocument: ${JSON.stringify(DOCID)}`);
-        cursor.toArray((err,quizdata) => {
-            assert.equal(err,null);
-            console.log(`Number Of Document Found: ${quizdata.length}`);
-        });
-        console.log(`quiz: ${JSON.stringify(quizdata)}`);
-        client.close();
-        console.log("Close DB connection");
+		getQuiz(db, DOCID, (quizdata) => {  // docs contain 1 document (hopefully)
+            console.log(`quiz: ${JSON.stringify(quizdata)}`);
+            client.close();
+            console.log("Close DB connection");
+		});
     });
     return quizdata
 }
