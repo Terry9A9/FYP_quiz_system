@@ -42,23 +42,19 @@ function PlayQuiz() {
     const [questionSet, setQuestionSet] = useState([] as quiz["questionSet"])
     const [quizId, setQuizId] = useState("" as string)
     const [questionNum, setQuestionNum] = useState(-1 as number)
-
     //ans & ranking
     const [selectedAnsIndex, setSelectedAnsIndex] = useState(-1 as number)
     const [totalPoint, setTotalPoint] = useState(0 as number)
     const [showRank, setShowRank] = useState(false as boolean)
     const [rankInfo, setRankInfo] = useState([] as profile[])
     const [waitMsg, setWaitMsg] = useState(false as boolean)
-
     //sync timer
     const [times, setTimes] = useState(-1 as number)
     const [timerStatus, setTimerStatus] = useState(false as boolean)
-   
     //websocket room & Msg
     const [joinedRoom, setJoinedRoom] = useState(false as boolean)
     const [roomMsg, setRoomMsg] = useState("" as string)
     const [showRoomMsg, setShowRoomMsg] = useState(false as boolean)
-    
     //anit cheating
     const [mouseMsg, setMouseMsg] = useState("" as string)
 
