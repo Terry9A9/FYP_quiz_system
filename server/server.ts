@@ -146,21 +146,21 @@ io.on('connect', async (socket) => {
     })
 })
 
-const getQuiz = (db, criteria, callback) => {
-    let cursor = db.collection('Quiz').find(criteria);
+const dbSearch = (db, criteria, callback) => {
+    let cursor = db.collection('Quiz').find(criteria, {_id:0});
     console.log(`findDocument: ${JSON.stringify(criteria)}`);
-    cursor.toArray((err,quizdata) => {
+    cursor.toArray((err,getquizdata) => {
         assert.equal(err,null);
-        console.log(`Number Of Document Found: ${quizdata.length}`);
-        callback(quizdata);
+        console.log(`Number Of Document Found: ${getquizdata.length}`);
+        callback(getquizdata[0]);
     });
+
 }
 
-const findQuiz = (quizId) => {
-    //connect to mongoDB
+const dbconnection = async(callback) => {
+    var fetchdata = {};
     const client = new MongoClient(mongourl);
-    var quizdata = {}
-    client.connect((err) => {
+    await client.connect((err) => {
         assert.equal(null, err);
         console.log("Connected successfully to mongoDB");
         const db = client.db(dbName);
@@ -170,15 +170,46 @@ const findQuiz = (quizId) => {
         let DOCID = {};
         DOCID['_id'] = ObjectID('63df677c25278606dc2881f5');
 
-		getQuiz(db, DOCID, (quizdata) => {  // docs contain 1 document (hopefully)
-            console.log(`quiz: ${JSON.stringify(quizdata)}`);
+		dbSearch(db, DOCID, (getquizdata) => {  // docs contain 1 document (hopefully)
             client.close();
             console.log("Close DB connection");
+            //console.log(`getdata[0]: ${JSON.stringify(getquizdata)}`)
+            fetchdata = getquizdata;
+            //console.log(`fetchdata: ${JSON.stringify(fetchdata)}`)
+            callback(fetchdata)
 		});
-    });
-    return quizdata
+    })
 }
 
+const findQuiz = (quizId) => {
+    var quizdata:quiz = {
+        title: '',
+        quiz_id: '',
+        created_by: '',
+        course: '',
+        start_date: '',
+        end_date: '',
+        time: 0,
+        mc: false,
+        random: false,
+        questionSet: []
+    };
 
-
-
+    //connect to mongoDB
+    dbconnection((getquizdata) => {
+        //console.log(`getquizdata: ${JSON.stringify(getquizdata)}`);
+        quizdata.title = getquizdata.title;
+        quizdata.created_by = getquizdata.created_by;
+        quizdata.start_date = getquizdata.start_date;
+        quizdata.end_date = getquizdata.end_date;
+        quizdata.time = getquizdata.time;
+        quizdata.mc = getquizdata.mc;
+        quizdata.random = getquizdata.random;
+        for (var i=0; i < getquizdata.questionSet.length; i++){
+            quizdata.questionSet[i] = getquizdata.questionSet[i];
+        };
+        //console.log(`getquizdata: ${JSON.stringify(quizdata)}`);
+    });
+    console.log(`quizdata: ${JSON.stringify(quizdata)}`);
+    return quizdata
+}
