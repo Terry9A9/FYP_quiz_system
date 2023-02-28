@@ -41,6 +41,7 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(
 });
 
 function PlayQuiz() {
+
     const [ws, setWs] = useState(webSocket('ws://localhost:3004'))
 
     const [course, setCourse] = useState("")
@@ -59,12 +60,10 @@ function PlayQuiz() {
     //sync timer
     const [times, setTimes] = useState(-1 as number)
     const [timerStatus, setTimerStatus] = useState(false as boolean)
-   
     //websocket room & Msg
     const [joinedRoom, setJoinedRoom] = useState(false as boolean)
     const [roomMsg, setRoomMsg] = useState("" as string)
     const [showRoomMsg, setShowRoomMsg] = useState(false as boolean)
-    
     //anit cheating
     const [mouseMsg, setMouseMsg] = useState("" as string)
 
