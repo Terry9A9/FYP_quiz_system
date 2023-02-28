@@ -103,8 +103,25 @@ io.on('connect', async (socket) => {
         socket.emit('join-room-message', `You've join ${roomId} room`);
         io.to(roomId).emit('room-brocast', `${socket.id} has join this room`);
     })
-    socket.on('quiz-start', ({roomId:roomId, quizId:quizId}) => {
-        let quiz = findQuiz(quizId) as quiz
+    await socket.on('quiz-start', ({roomId:roomId, quizId:quizId}) => {
+        //let quiz = findQuiz(quizId);
+        var quiz:quiz = {
+            title: '',
+            quiz_id: '',
+            created_by: '',
+            course: '',
+            start_date: '',
+            end_date: '',
+            time: 0,
+            mc: false,
+            random: false,
+            questionSet: []
+        }
+        dbconnect((data) => {
+            quiz = data;
+            console.log(`here is socket quiz: ${JSON.stringify(quiz)}`)
+        })
+        console.log(`here is socket quiz2: ${JSON.stringify(quiz)}`)
         io.sockets.to(roomId).emit('room-brocast', `Quiz start`);
         //io.sockets.to(roomId).emit('quiz', quiz);
         io.sockets.to(roomId).emit('quiz-start', quiz);
@@ -115,7 +132,22 @@ io.on('connect', async (socket) => {
             }, quiz.time)
     })
     socket.on('next-question', ({roomId:roomId, questionNum:questionNum, quizId: quizId}) => {
-        let quiz = findQuiz(quizId) as quiz
+        //let quiz = findQuiz(quizId);
+        let quiz:quiz = {
+            title: '',
+            quiz_id: '',
+            created_by: '',
+            course: '',
+            start_date: '',
+            end_date: '',
+            time: 0,
+            mc: false,
+            random: false,
+            questionSet: []
+        }
+        dbconnect((data) => {
+            quiz = data;
+        })
         io.sockets.to(roomId).emit('next-question', questionNum);
         io.sockets.to(roomId).emit('timerStatus', {status: true , time: quiz.time});
         setTimeout(()=>{
@@ -125,7 +157,22 @@ io.on('connect', async (socket) => {
     })
 
     socket.on('ans_submit', ({questionNum: questionNum, quizId: quizId, ans: selectedAnsIndex, roomId: roomId}) => {
-        let quiz = findQuiz(quizId) as quiz
+        let quiz:quiz = {
+            title: '',
+            quiz_id: '',
+            created_by: '',
+            course: '',
+            start_date: '',
+            end_date: '',
+            time: 0,
+            mc: false,
+            random: false,
+            questionSet: []
+        }
+        dbconnect((data) => {
+            quiz = data;
+        })
+
         if (quiz.questionSet[questionNum].correct == selectedAnsIndex){
             socket.emit('point', quiz.questionSet[questionNum].point);
         }
@@ -147,20 +194,20 @@ io.on('connect', async (socket) => {
 })
 
 const dbSearch = (db, criteria, callback) => {
-    let cursor = db.collection('Quiz').find(criteria, {_id:0});
+    var getquizdata = {};
+    let cursor = db.collection('Quiz').find(criteria).project({_id:0});
     console.log(`findDocument: ${JSON.stringify(criteria)}`);
     cursor.toArray((err,getquizdata) => {
         assert.equal(err,null);
         console.log(`Number Of Document Found: ${getquizdata.length}`);
-        callback(getquizdata[0]);
+        callback(getquizdata[0]) as quiz;
     });
-
 }
 
-const dbconnection = async(callback) => {
+const dbconnect = (callback) => {
     var fetchdata = {};
-    const client = new MongoClient(mongourl);
-    await client.connect((err) => {
+    const client = new MongoClient(mongourl,{ useNewUrlParser: true, useUnifiedTopology: true });
+    client.connect((err) => {
         assert.equal(null, err);
         console.log("Connected successfully to mongoDB");
         const db = client.db(dbName);
@@ -173,10 +220,9 @@ const dbconnection = async(callback) => {
 		dbSearch(db, DOCID, (getquizdata) => {  // docs contain 1 document (hopefully)
             client.close();
             console.log("Close DB connection");
-            //console.log(`getdata[0]: ${JSON.stringify(getquizdata)}`)
             fetchdata = getquizdata;
             //console.log(`fetchdata: ${JSON.stringify(fetchdata)}`)
-            callback(fetchdata)
+            callback(fetchdata) as quiz
 		});
     })
 }
@@ -193,23 +239,12 @@ const findQuiz = (quizId) => {
         mc: false,
         random: false,
         questionSet: []
-    };
-
+    }
     //connect to mongoDB
-    dbconnection((getquizdata) => {
-        //console.log(`getquizdata: ${JSON.stringify(getquizdata)}`);
-        quizdata.title = getquizdata.title;
-        quizdata.created_by = getquizdata.created_by;
-        quizdata.start_date = getquizdata.start_date;
-        quizdata.end_date = getquizdata.end_date;
-        quizdata.time = getquizdata.time;
-        quizdata.mc = getquizdata.mc;
-        quizdata.random = getquizdata.random;
-        for (var i=0; i < getquizdata.questionSet.length; i++){
-            quizdata.questionSet[i] = getquizdata.questionSet[i];
-        };
-        //console.log(`getquizdata: ${JSON.stringify(quizdata)}`);
+    dbconnect((getquizdata) => {
+        quizdata = getquizdata;
+        console.log(`quizdata: ${JSON.stringify(quizdata)}`);
     });
-    console.log(`quizdata: ${JSON.stringify(quizdata)}`);
+    //console.log(`quizdata: ${JSON.stringify(quizdata)}`);
     return quizdata
 }
