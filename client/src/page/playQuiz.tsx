@@ -4,11 +4,11 @@ import axios from 'axios'
 import webSocket from 'socket.io-client'
 import {useParams} from "react-router-dom";
 import {quiz, profile} from "../state";
-import Toast from 'react-bootstrap/Toast';
-import ToastContainer from 'react-bootstrap/ToastContainer';
+
 import {Container, Row, Col} from 'react-bootstrap';
 import { makeStyles } from 'tss-react/mui';
-import {Button, Snackbar, InputLabel, MenuItem, Select, FormControl, RadioGroup} from '@mui/material';
+import { experimentalStyled as styled } from '@mui/material/styles';
+import {Button, Snackbar, Grid, Paper , FormControl, RadioGroup} from '@mui/material';
 import MuiAlert, { AlertProps } from '@mui/material/Alert';
 
 const useStyles = makeStyles()((theme) => {
@@ -17,7 +17,6 @@ const useStyles = makeStyles()((theme) => {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            marginTop: '100px'
         }
         ,
         textField: {
@@ -25,6 +24,14 @@ const useStyles = makeStyles()((theme) => {
         }
     }
 });
+
+const Item = styled(Paper)(({ theme }) => ({
+    backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
+    ...theme.typography.body2,
+    padding: theme.spacing(2),
+    color: theme.palette.text.secondary,
+}));
+
 
 const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(
     props,
@@ -34,21 +41,20 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(function Alert(
 });
 
 function PlayQuiz() {
-    const [ws, setWs] = useState()
+    const [ws, setWs] = useState(webSocket('ws://localhost:3004'))
 
-    //store quiz related
-    const [quiz, setQuiz] = useState({} as quiz)
-    const [course, setCourse] = useState("" as string)
-    const [questionSet, setQuestionSet] = useState([] as quiz["questionSet"])
-    const [quizId, setQuizId] = useState("" as string)
-    const [questionNum, setQuestionNum] = useState(-1 as number)
-
-    //ans & ranking
-    const [selectedAnsIndex, setSelectedAnsIndex] = useState(-1 as number)
-    const [totalPoint, setTotalPoint] = useState(0 as number)
-    const [showRank, setShowRank] = useState(false as boolean)
+    const [course, setCourse] = useState("")
+    const [quiz, setQuiz] = useState("")
+    const [questionSet, setQuestionSet] = useState([] as quiz["question_set"])
+    const [quizId, setQuizId] = useState("")
+    const [questionNum, setQuestionNum] = useState(-1)
+    const [selectedAnsIndex, setSelectedAnsIndex] = useState(-1)
+    const [totalPoint, setTotalPoint] = useState(0)
+    const [showRank, setShowRank] = useState(false)
     const [rankInfo, setRankInfo] = useState([] as profile[])
     const [waitMsg, setWaitMsg] = useState(false as boolean)
+
+    const [IsStart, setIsStart] = useState(false as boolean)
 
     //sync timer
     const [times, setTimes] = useState(-1 as number)
@@ -63,11 +69,31 @@ function PlayQuiz() {
     const [mouseMsg, setMouseMsg] = useState("" as string)
 
 
+    const [OutCount,setOutCount] = useState(0 as number)
+    const [Time0,setTime0] = useState(0 as number)
+    const [Time1,setTime1] = useState(0 as number)
+    const [Time,setTime] = useState(0 as number)
+    const [enter,setEnter]= useState(false as boolean)
+    const [out,setOut]= useState(false as boolean)
+    const [timeone,setTimeone]=useState(false as boolean)
+
+
+    useEffect(()=>{
+        if(enter){
+            let temp = Math.floor((Date.now()-Time0)/1000)
+            setTime((Time)=>(Time+temp))
+            console.log(temp+"+"+Date.now()+"-"+Time0)
+        }else{
+            setTime0(Date.now)
+            setOutCount(OutCount+1)
+        }
+    },[enter])
+
+
     const {classes} = useStyles();
     let {roomId} = useParams(); //get URL params
 
     const connectWebSocket = () => {
-        setWs(webSocket('ws://localhost:3004'))
     }
 
     //initWebSocket
@@ -96,28 +122,21 @@ function PlayQuiz() {
     }, [timerStatus, times])
 
     function RoomBroadcastToast() { //react component
-        return (
-            <Snackbar open={showRoomMsg} autoHideDuration={2000} onClose={() => setShowRoomMsg(false)}>
-                <Alert onClose={() => setShowRoomMsg(false)} severity="success" color="info" sx={{ width: '100%' }}>
-                    {roomMsg}
-                </Alert>
-            </Snackbar>
-        )
     }
 
     function WaitCountDown() { //react component
         return (
             <>
-                <Row>
-                    <Col>
+                <Grid container>
+                    <Grid item md={6}>
                         wait for question times up
-                    </Col>
-                    <Col>
+                    </Grid>
+                    <Grid item md={6}>
                         <h1>
                             {timerStatus && (`Time remain: ${times}s`)}
                         </h1>
-                    </Col>
-                </Row>
+                    </Grid>
+                </Grid>
 
             </>
         )
@@ -195,8 +214,10 @@ function PlayQuiz() {
         });
         ws.on('quiz-start', (msg) => {
             setQuiz(msg)
-            setQuestionSet(msg.questionSet)
+            console.log(msg)
+            setQuestionSet(msg.question_set)
             setQuestionNum(0)
+            setIsStart(true)
         });
         ws.on('timerStatus', (msg: { status: boolean, time: number }) => {
             setTimerStatus(msg.status)
@@ -220,7 +241,7 @@ function PlayQuiz() {
     }
 
     const nextQuestion = () => {
-        ws?.emit('next-question', {roomId: roomId, questionNum: questionNum + 1, quizId: quizId});
+        ws.emit('next-question', {roomId: roomId, questionNum: questionNum + 1, quizId: quizId});
     }
 
     const submit_ans = () => {
@@ -233,7 +254,7 @@ function PlayQuiz() {
                 setTotalPoint(point)
             }
             console.log(point)
-            ws?.emit('point_submit', {roomId: roomId, totalPoint: point})
+            ws.emit('point_submit', {roomId: roomId, totalPoint: point})
         } else {
             setWaitMsg(true);
         }
@@ -242,80 +263,70 @@ function PlayQuiz() {
     function Rank(){
         return (
             <>
-                <Row>
-                    {rankInfo.map((e) => (
-                        <ul>
-                            {e.socketId} {e.totalPoint}
-                        </ul>
-                    ))}
-                </Row>
+                <Grid container direction="column" alignItems="center" spacing={5}>
+                    <Grid item>
+                        {rankInfo.map((e,index) => (
+                            <>
+                                <Item>
+                                    {index+1}. {e.socketId} {e.totalPoint}
+                                </Item>
+                            </>
+                        ))}
+                    </Grid>
+                </Grid>
             </>
         )
     }
 
     const handleMouseLeave = () => {
+        document.querySelector("#show");
+        IsStart ? infoModal.showModal():
+        setEnter(false)
+        setOutCount(OutCount+1)
         setMouseMsg("mouse Leave!!")
         console.log("mouse Leave!!")
     }
 
     const handleMouseEnter = () => {
+        IsStart ? infoModal.close():
+        setEnter(true)
         setMouseMsg("mouse Enter!!")
         console.log("mouse Enter!!")
     }
 
 
     return (
-        <div className={classes.root} onMouseLeave={() => handleMouseLeave()} onMouseEnter={() => handleMouseEnter()} tabIndex={0}
-             style={{height: "100vh", margin: "3vh"}}>
-            <meta name="viewport" content="initial-scale=1, width=device-width" />
-            <Container>
-                <Row>
-                    {joinedRoom && joinRoomMsg()}
-                </Row>
-                <Row>
-                    <Col>
-                        <Button variant="contained" color="primary" onClick={connectWebSocket}>
-                            Connect WebSocket
-                        </Button>
-                    </Col>
-                    <Col>
-                        <Button variant="contained" color="primary" onClick={startQuiz}>
-                            Quiz Start
-                        </Button>
-                    </Col>
-                    <Col>
-                        <FormControl fullWidth>
-                            <InputLabel id="QuizId">QuizId</InputLabel>
-                            <Select
-                                labelId="QuizId"
-                                id="QuizId-select"
-                                value={quizId}
-                                label="Age"
-                                onChange={(v) => setQuizId(v.target.value)}
-                            >
-                                <MenuItem value=""></MenuItem>
-                                <MenuItem value="5671">390test1</MenuItem>
-                                <MenuItem value="0786">333test3</MenuItem>
-                                <MenuItem value="2347">390test2</MenuItem>
-                                <MenuItem value="4590">390test3</MenuItem>
-                            </Select>
-                        </FormControl>
-                    </Col>
-                </Row>
-                <br/>
-                <Row>
-                    <Col>
-                        {questionNum + 1 < questionSet?.length ?
-                            <Button variant="contained" color="primary" onClick={nextQuestion}>next question</Button> : " "}
-                    </Col>
-                </Row>
-                <Row>
-                    {waitMsg ? <WaitCountDown/> : showRank? <Rank/> : <QuestionComponent/>}
-                </Row>
-                <br/>
-                {mouseMsg}
-            </Container>
-            <RoomBroadcastToast/>
+        <div onMouseLeave={() => handleMouseLeave()} onMouseEnter={() => handleMouseEnter()} tabIndex={0}
+             style={{height: "100vh"}}>
+            <div className={classes.root}>
+                <Container>
+                    <Row>
+                        {joinedRoom && joinRoomMsg()}
+                    </Row>
+                    <Row>
+                        <Col>
+                            <Button variant="contained" color="primary" onClick={startQuiz}>
+                                Quiz Start
+                            </Button>
+                        </Col>
+                    </Row>
+                    <br/>
+                    <Row>
+                        <Col>
+                            {questionNum + 1 < questionSet?.length ?
+                                <Button variant="contained" color="primary" onClick={nextQuestion}>next question</Button> : " "}
+                        </Col>
+                    </Row>
+                    <Row>
+                        {waitMsg ? <WaitCountDown/> : showRank? <Rank/> : <QuestionComponent/>}
+                    </Row>
+                    <br/>
+                    {mouseMsg}
+                    <dialog id="infoModal"style={{height: "100%",width:'100%'}} >
+                        <p>plz</p>
+                    </dialog>
+                </Container>
+            </div>
         </div>
     )
 }
