@@ -7,16 +7,22 @@ export type quiz = {
     start_date: string,
     end_date: string,
     time: number,
-    mc: boolean,
     random: boolean,
-    questionSet: question[]
+    question_set: question[]
 }
 
 export type question = {
     point: number,
     question: string,
-    img: string,
-    answers: [],
+    type:
+        "Mc"
+        | "TrueOrFalse"
+        | "FillInTheBlank"
+        | "Sorting"
+        | "Picture"
+        | "Drawing",
+    img?: string,
+    answers: string[],
     correct: number
 }
 
