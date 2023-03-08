@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { TextField, Button } from '@mui/material';
 import { useNavigate  } from 'react-router-dom';
 import { makeStyles } from 'tss-react/mui';
+import { loginFunction } from './loginFunction';
+import { msalInstance } from '../state';
+
 const useStyles = makeStyles()((theme) => {
     return {
         root: {
@@ -21,6 +24,20 @@ const EnterRoomId = () => {
     const {classes} = useStyles();
     const navigate = useNavigate();
     const [roomId, setRoomId] = useState('');
+    const [user, setUser] = useState(null);
+    const getUser = async () => {
+          try {
+            const response = await msalInstance.acquireTokenSilent({
+              scopes: ['https://graph.microsoft.com/user.read'],
+            });
+            const user = await msalInstance.getAccount();
+            setUser(user);
+            console.log(response);
+          } catch (error) {
+            console.log(error);
+          }
+        };    
+        getUser();
 
     const handleSubmit = e => {
         e.preventDefault();
@@ -29,6 +46,7 @@ const EnterRoomId = () => {
 
     return (
         <>
+        <h1>Hello, {user.name}</h1>
             <div className={classes.root}>
                 <TextField
                     label="Room ID"

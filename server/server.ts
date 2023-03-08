@@ -34,6 +34,10 @@ router.get('/api/quiz/:roomId', async ctx => {
     ctx.body = ctx.params;
 });
 
+router.get('/api/login', async ctx => {
+    ctx.body = ctx.params;
+});
+
 const server = app.listen(port, () => {
     console.log(`Server start at port http://localhost:${port}`)
 });

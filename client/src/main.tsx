@@ -4,8 +4,9 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import PlayQuiz from "./page/playQuiz"
 import EnterRoomId from "./page/selectQuizRoom"
 import 'bootstrap/dist/css/bootstrap.css';
-import Drawing from "./page/drawing";
-import DrawingCanvas from "./page/drawing";
+import Login from './page/login';
+//import Drawing from "./page/drawing";
+//import DrawingCanvas from "./page/drawing";
 
 
 const router = createBrowserRouter([
@@ -18,9 +19,13 @@ const router = createBrowserRouter([
     element: <EnterRoomId/>,
   },
   {
-    path: "/drawing",
-    element: <DrawingCanvas width={400} height={400}/>,
+    path: "/login",
+    element: <Login/>,
   },
+  // {
+  //   path: "/drawing",
+  //   element: <DrawingCanvas width={400} height={400}/>,
+  // },
 ]);
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(

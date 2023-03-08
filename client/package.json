@@ -25,7 +25,9 @@
     "socket.io": "^4.5.4",
     "socket.io-client": "^4.5.4",
     "tss-react": "^4.6.0",
-    "ws": "^8.12.0"
+    "ws": "^8.12.0",
+    "@azure/msal-node": "^1.15.0",
+    "msal": "^1.1.0"
   },
   "devDependencies": {
     "@types/react": "^18.0.26",
