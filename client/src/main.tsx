@@ -4,8 +4,15 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import PlayQuiz from "./page/playQuiz"
 import EnterRoomId from "./page/selectQuizRoom"
 import 'bootstrap/dist/css/bootstrap.css';
-import Drawing from "./page/drawing";
-import DrawingCanvas from "./page/drawing";
+//import Drawing from "./page/drawing";
+//import DrawingCanvas from "./page/drawing";
+
+var path = require('path');
+var express = require('express');
+var session = require('express-session');
+var createError = require('http-errors');
+var cookieParser = require('cookie-parser');
+var logger = require('morgan');
 
 
 const router = createBrowserRouter([
@@ -17,10 +24,10 @@ const router = createBrowserRouter([
     path: "/",
     element: <EnterRoomId/>,
   },
-  {
-    path: "/drawing",
-    element: <DrawingCanvas width={400} height={400}/>,
-  },
+  // {
+  //   path: "/drawing",
+  //   element: <DrawingCanvas width={400} height={400}/>,
+  // },
 ]);
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
