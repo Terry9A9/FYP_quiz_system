@@ -4,7 +4,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import PlayQuiz from "./page/playQuiz"
 import EnterRoomId from "./page/selectQuizRoom"
 import 'bootstrap/dist/css/bootstrap.css';
-import Login from './page/login';
+import LoginLogoutButton from './page/login';
 //import Drawing from "./page/drawing";
 //import DrawingCanvas from "./page/drawing";
 
@@ -20,7 +20,7 @@ const router = createBrowserRouter([
   },
   {
     path: "/login",
-    element: <Login/>,
+    element: <LoginLogoutButton/>,
   },
   // {
   //   path: "/drawing",

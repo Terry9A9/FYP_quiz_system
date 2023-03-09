@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { TextField, Button } from '@mui/material';
 import { useNavigate  } from 'react-router-dom';
 import { makeStyles } from 'tss-react/mui';
-import { loginFunction } from './loginFunction';
-import { msalInstance } from '../state';
+import { handleLogin, handleLogout, getUserData } from './loginFunction';
 
 const useStyles = makeStyles()((theme) => {
     return {
@@ -25,29 +24,41 @@ const EnterRoomId = () => {
     const navigate = useNavigate();
     const [roomId, setRoomId] = useState('');
     const [user, setUser] = useState(null);
-    const getUser = async () => {
-          try {
-            const response = await msalInstance.acquireTokenSilent({
-              scopes: ['https://graph.microsoft.com/user.read'],
-            });
-            const user = await msalInstance.getAccount();
-            setUser(user);
-            console.log(response);
-          } catch (error) {
-            console.log(error);
-          }
-        };    
-        getUser();
-
     const handleSubmit = e => {
         e.preventDefault();
         navigate(`/play/quiz/${roomId}`);
     };
+    
+    // Call the getUserData function when the component loads
+    useEffect(() => {
+        if(!user){
+            getUserData().then(data => {
+                setUser(data);
+            });
+        }
+    }, []);
+
+    async function login() {
+    // Set the user profile state
+      const user = handleLogin();
+      setUser(await user);
+    }
+
+    function logout() {
+        handleLogout();
+        setUser(null);
+    }
 
     return (
         <>
-        <h1>Hello, {user.name}</h1>
             <div className={classes.root}>
+        {user? (
+        <><p>Welcome, {user.displayName}.</p>
+        <Button variant='contained' color='primary' onClick={logout}>Logout here</Button>
+        </>
+        ):(
+            <Button variant='contained' color='primary' onClick={login}>Login with Microsoft Here</Button>
+        )}
                 <TextField
                     label="Room ID"
                     value={roomId}

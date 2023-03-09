@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate  } from 'react-router-dom';
-import { TextField, Button } from '@mui/material';
+import { useState, useEffect } from 'react';
+import { Button } from '@mui/material';
 import { makeStyles } from 'tss-react/mui';
-import { msalInstance } from '../state';
+import { useNavigate } from 'react-router-dom';
+import { handleLogin, handleLogout, msalInstance, getUserData} from './loginFunction';
+
 
 const useStyles = makeStyles()((theme) => {
     return {
@@ -19,40 +20,57 @@ const useStyles = makeStyles()((theme) => {
     }
 });
 
-function Login() {
-    const [user, setUser] = useState(null);
-    const {classes} = useStyles();
-    const navigate = useNavigate();
-    const handleLogin = async () => {
-        try {
-          const response = await msalInstance.loginPopup({
-            scopes: ['openid', 'profile', 'email'],
-          });
-          const user = await msalInstance.getAccount();
-          setUser(user);
-          //navigate(`/`);
-          console.log(response);
-        } catch (error) {
-          console.log(error);
-        }
-      };
-    
-      const handleLogout = () => {
-        msalInstance.logout();
-        setUser(null);
-      };
-  return (
-    <div className={classes.root}>
-      {user ? (
-        <div className={classes.root}>
-          <p>Welcome {user.name}!</p>
-          <Button variant="contained" color="primary" onClick={handleLogout}>Logout</Button>
-        </div>
-      ) : (
-        <Button variant="contained" color="primary" onClick={handleLogin}>Login</Button>
-      )}
-    </div>
-  );
-}
+const LoginLogoutButton: React.FC = () => {
+  const [user, setUser] = useState(null);
+  const { classes } = useStyles();
+  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
-export default Login;
+  useEffect(() => {
+    if(!user) {
+      getUserData().then((user) => {
+      setUser(user);
+      setIsLoading(false);
+      navigate('/login');
+    });
+    }
+  }, []);
+
+  async function login() {
+    // Set the user profile state
+      const user = handleLogin();
+      setUser(await user);
+      navigate('/login');
+    }
+
+    function logout() {
+        handleLogout();
+        setUser(null);
+        navigate('/login');
+    }
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!user) {
+    return (
+      <div className={classes.root}>
+      <Button variant='contained' color='primary' onClick={login}>Login with Microsoft</Button>
+      </div>
+    );
+  }else{
+    return (
+    <div className={classes.root}>
+      <h2>{user.displayName}</h2>
+      <p>{user.mail}</p>
+      <Button variant='contained' color='primary' onClick={logout}>Logout</Button>
+      <p>{JSON.stringify(user)}</p>
+    </div>
+    );
+  }
+
+
+};
+
+export default LoginLogoutButton;
