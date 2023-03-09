@@ -69,8 +69,6 @@ const LoginLogoutButton: React.FC = () => {
     </div>
     );
   }
-
-
 };
 
 export default LoginLogoutButton;

@@ -1,5 +1,4 @@
 import * as msal from "@azure/msal-browser";
-import { UserAgentApplication } from "msal";
 
 const msalConfig = {
   auth: {
@@ -8,7 +7,7 @@ const msalConfig = {
     redirectUri: 'http://localhost:5173/auth/callback',
   },
     cache: {
-      cacheLocation: "sessionStorage" as 'localstorage',
+      cacheLocation: 'localStorage',
       storeAuthStateInCookie: true,
     },
   };
@@ -25,7 +24,9 @@ export async function handleLogin () {
     if (!account) {
       // If there is no active account, open the login popup
       while (true) {
-        const result = await msalInstance.loginPopup();
+        const loginRequest = {scopes: ["User.Read"]}
+        const result = await msalInstance.loginPopup(loginRequest);
+
         if (result.account) {
           account = result.account;
           break;
@@ -39,20 +40,21 @@ export async function handleLogin () {
     if (account) {
       // Use the authorization code to obtain an access token
       const tokenResult = await msalInstance.acquireTokenSilent({
-        scopes: ['user.read'],
+        scopes: ['openid','offline_access', 'User.read'],
         account: account
       });
 
       // Use the access token to authenticate the user and access their Microsoft account information
       const response = await fetch('https://graph.microsoft.com/v1.0/me', {
         headers: {
-          Authorization: `Bearer ${tokenResult.accessToken}`
+          Authorization: `Bearer ${tokenResult.accessToken}`,
+          grantType: 'authorization_code'
         }
       });
       const user = await response.json();
       // Store the login data in the localStorage
       localStorage.setItem("loginData", JSON.stringify(tokenResult));
-      console.log("The token result of login is:", JSON.stringify(tokenResult.accessToken));
+      console.log("The token result of login is:", JSON.stringify(tokenResult));
       return user;
 
     }
@@ -63,7 +65,7 @@ export async function handleLogin () {
 
 export const handleLogout = async () => {
   try {
-    await msalInstance.logout();
+    await msalInstance.logoutRedirect();
   } catch (error) {
     console.error(error);
   }
@@ -87,7 +89,7 @@ export const getUserData = async () => {
             // Use the access token to retrieve the user's profile information
             const tokenResult = await msalInstance.acquireTokenSilent({
               account: accounts[0],
-              scopes: ['user.read']
+              scopes: ['User.read']
             })
   
             const response = await fetch('https://graph.microsoft.com/v1.0/me', {
