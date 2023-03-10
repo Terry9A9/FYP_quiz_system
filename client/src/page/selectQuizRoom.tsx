@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { TextField, Button } from '@mui/material';
-import { useNavigate  } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { makeStyles } from 'tss-react/mui';
 import { handleLogin, handleLogout, getUserData } from './loginFunction';
+import {userProfile} from "../state";
+import _ from 'lodash'
 
 const useStyles = makeStyles()((theme) => {
     return {
@@ -12,7 +14,7 @@ const useStyles = makeStyles()((theme) => {
             alignItems: 'center',
             marginTop: '100px'
         }
-    ,
+        ,
         textField: {
             margin: '20px 0'
         }
@@ -20,18 +22,18 @@ const useStyles = makeStyles()((theme) => {
 });
 
 const EnterRoomId = () => {
-    const {classes} = useStyles();
+    const { classes } = useStyles();
     const navigate = useNavigate();
     const [roomId, setRoomId] = useState('');
-    const [user, setUser] = useState(null);
+    const [user, setUser] = useState({} as userProfile);
     const handleSubmit = e => {
         e.preventDefault();
         navigate(`/play/quiz/${roomId}`);
     };
-    
+
     // Call the getUserData function when the component loads
     useEffect(() => {
-        if(!user){
+        if (_.isEmpty(user)) {
             getUserData().then(data => {
                 setUser(data);
             });
@@ -39,26 +41,28 @@ const EnterRoomId = () => {
     }, []);
 
     async function login() {
-    // Set the user profile state
-      const user = handleLogin();
-      setUser(await user);
+        // Set the user profile state
+        const user = handleLogin();
+        setUser(await user);
     }
 
     function logout() {
         handleLogout();
-        setUser(null);
+        setUser({} as userProfile);
     }
 
     return (
         <>
             <div className={classes.root}>
-        {user? (
-        <><p>Welcome, {user.displayName}.</p>
-        <Button variant='contained' color='primary' onClick={logout}>Logout here</Button>
-        </>
-        ):(
-            <Button variant='contained' color='primary' onClick={login}>Login with Microsoft Here</Button>
-        )}
+                {user ? (
+                    <>
+                        <p>Welcome, {user.displayName}.</p>
+                        <Button variant='contained' color='primary' onClick={logout}>Logout here</Button>
+                    </>
+                ) : (
+                    <Button variant='contained' color='primary' onClick={login}>Login with Microsoft Here</Button>
+                )
+                }
                 <TextField
                     label="Room ID"
                     value={roomId}

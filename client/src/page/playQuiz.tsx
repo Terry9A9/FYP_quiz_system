@@ -3,8 +3,8 @@ import {useState, useEffect} from 'react'
 import axios from 'axios'
 import webSocket from 'socket.io-client'
 import {useParams} from "react-router-dom";
-import {quiz, profile} from "../state";
-
+import {quiz, profile, userProfile} from "../state";
+import _ from 'lodash'
 import {Container, Row, Col} from 'react-bootstrap';
 import { makeStyles } from 'tss-react/mui';
 import { experimentalStyled as styled } from '@mui/material/styles';
@@ -76,10 +76,10 @@ function PlayQuiz() {
     const [enter,setEnter]= useState(false as boolean)
     const [out,setOut]= useState(false as boolean)
     const [timeone,setTimeone]=useState(false as boolean)
-    const [user, setUser] = useState(null);
+    const [user, setUser] = useState({} as userProfile);
     
     useEffect(() => {
-        if(!user) {
+        if(_.isEmpty(user)) {
             getUserData().then((user) => {
             setUser(user);
           });

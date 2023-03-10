@@ -348,6 +348,11 @@
   "resolved" "https://registry.npmjs.org/@emotion/weak-memoize/-/weak-memoize-0.3.0.tgz"
   "version" "0.3.0"
 
+"@esbuild/linux-x64@0.16.16":
+  "integrity" "sha512-G1+09TopOzo59/55lk5Q0UokghYLyHTKKzD5lXsAOOlGDbieGEFJpJBr3BLDbf7cz89KX04sBeExAR/pL/26sA=="
+  "resolved" "https://registry.npmjs.org/@esbuild/linux-x64/-/linux-x64-0.16.16.tgz"
+  "version" "0.16.16"
+
 "@eslint/eslintrc@^1.4.1":
   "integrity" "sha512-XXrH9Uarn0stsyldqDYq8r++mROmWRI1xKMXa640Bb//SY1+ECYX6VzT6Lcx5frD0V30XieqJ0oX9I2Xj5aoMA=="
   "resolved" "https://registry.npmjs.org/@eslint/eslintrc/-/eslintrc-1.4.1.tgz"
