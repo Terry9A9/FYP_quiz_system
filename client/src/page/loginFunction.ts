@@ -41,7 +41,7 @@ export async function handleLogin () {
       // Use the authorization code to obtain an access token
       const tokenResult = await msalInstance.acquireTokenSilent({
         scopes: ['openid','offline_access', 'User.read'],
-        account: account
+        account: account,
       });
 
       // Use the access token to authenticate the user and access their Microsoft account information
@@ -82,7 +82,7 @@ export const getUserData = async () => {
           // get and set active account.
           const account = msalInstance.getActiveAccount();
           msalInstance.setActiveAccount(account);
-  
+
           // Check if the user is already logged in
           const accounts = await msalInstance.getAllAccounts();
           if (accounts.length > 0) {
@@ -91,7 +91,7 @@ export const getUserData = async () => {
               account: accounts[0],
               scopes: ['User.read']
             })
-  
+            
             const response = await fetch('https://graph.microsoft.com/v1.0/me', {
               headers: {
                 Authorization: `Bearer ${tokenResult.accessToken}`

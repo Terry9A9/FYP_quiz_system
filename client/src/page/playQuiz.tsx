@@ -10,6 +10,7 @@ import { makeStyles } from 'tss-react/mui';
 import { experimentalStyled as styled } from '@mui/material/styles';
 import {Button, Snackbar, Grid, Paper , FormControl, RadioGroup} from '@mui/material';
 import MuiAlert, { AlertProps } from '@mui/material/Alert';
+import { getUserData } from './loginFunction';
 
 const useStyles = makeStyles()((theme) => {
     return {
@@ -75,6 +76,15 @@ function PlayQuiz() {
     const [enter,setEnter]= useState(false as boolean)
     const [out,setOut]= useState(false as boolean)
     const [timeone,setTimeone]=useState(false as boolean)
+    const [user, setUser] = useState(null);
+    
+    useEffect(() => {
+        if(!user) {
+            getUserData().then((user) => {
+            setUser(user);
+          });
+          }
+    }, [])
 
 
     useEffect(()=>{
@@ -267,7 +277,7 @@ function PlayQuiz() {
                         {rankInfo.map((e,index) => (
                             <>
                                 <Item>
-                                    {index+1}. {e.socketId} {e.totalPoint}
+                                    {index+1}. {user.displayName} {e.totalPoint}
                                 </Item>
                             </>
                         ))}
