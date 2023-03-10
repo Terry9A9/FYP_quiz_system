@@ -9,6 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@azure/msal-browser": "^2.34.0",
+    "@azure/msal-react": "^1.5.4",
     "@emotion/react": "^11.10.5",
     "@emotion/styled": "^11.10.5",
     "@mui/icons-material": "^5.11.9",
@@ -17,6 +19,7 @@
     "axios": "^1.2.2",
     "bootstrap": "^5.2.3",
     "fabric": "^5.3.0",
+    "lodash": "^4.17.21",
     "react": "^18.2.0",
     "react-bootstrap": "^2.7.0",
     "react-dom": "^18.2.0",
@@ -25,9 +28,7 @@
     "socket.io": "^4.5.4",
     "socket.io-client": "^4.5.4",
     "tss-react": "^4.6.0",
-    "ws": "^8.12.0",
-    "@azure/msal-browser": "^2.34.0",
-    "@azure/msal-react": "^1.5.4"
+    "ws": "^8.12.0"
   },
   "devDependencies": {
     "@types/react": "^18.0.26",
