@@ -26,6 +26,7 @@ type stuProfile = {
     totalPoint: number
 }
 
+
 router.get('/api/play/quiz/:quizId', async ctx => {
     let quiz_id = ctx.params
 });
