@@ -25,6 +25,15 @@ import { Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
+import {quiz, profile, userProfile} from "../state";
+import _ from 'lodash'
+import {Container, Row, Col} from 'react-bootstrap';
+import { makeStyles } from 'tss-react/mui';
+import { experimentalStyled as styled } from '@mui/material/styles';
+import {Button, Snackbar, Grid, Paper , FormControl, RadioGroup} from '@mui/material';
+import MuiAlert, { AlertProps } from '@mui/material/Alert';
+import { getUserData } from './loginFunction';
+
 const useStyles = makeStyles()((theme) => {
     return {
         center:{
@@ -107,6 +116,19 @@ function PlayQuiz() {
     const [Time0,setTime0] = useState(0 as number)
     const [Time,setTime] = useState(0 as number)
     const [enter,setEnter]= useState(false as boolean)
+
+    const [out,setOut]= useState(false as boolean)
+    const [timeone,setTimeone]=useState(false as boolean)
+    const [user, setUser] = useState({} as userProfile);
+    
+    useEffect(() => {
+        if(_.isEmpty(user)) {
+            getUserData().then((user) => {
+            setUser(user);
+          });
+          }
+    }, [])
+
 
     const isPresent = useIsPresent();
 
@@ -420,6 +442,25 @@ function PlayQuiz() {
         } else {
             setWaitMsg(true);
         }
+    }
+
+
+    function Rank(){
+        return (
+            <>
+                <Grid container direction="column" alignItems="center" spacing={5}>
+                    <Grid item>
+                        {rankInfo.map((e,index) => (
+                            <>
+                                <Item>
+                                    {index+1}. {user.displayName} {e.totalPoint}
+                                </Item>
+                            </>
+                        ))}
+                    </Grid>
+                </Grid>
+            </>
+        )
     }
 
     const handleMouseLeave = () => {

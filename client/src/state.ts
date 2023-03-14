@@ -30,3 +30,7 @@ export type profile = {
     socketId:string,
     totalPoint: number
 }
+
+export type userProfile = {
+    displayName: string
+}

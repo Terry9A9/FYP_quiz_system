@@ -24,6 +24,9 @@ type stuProfile = {
 }
 
 app.get('/api/play/quiz/:quizId', async ctx => {
+
+router.get('/api/play/quiz/:quizId', async ctx => {
+
     let quiz_id = ctx.params
 });
 
@@ -31,6 +34,10 @@ app.get('/api/quiz/:quizId', (req,res) => {
     console.log("apiiiii")
     res.send("apiiiiiaai")
 
+});
+
+router.get('/api/login', async ctx => {
+    ctx.body = ctx.params;
 });
 
 const server = app.listen(port, () => {

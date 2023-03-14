@@ -5,6 +5,7 @@ import PlayQuiz from "./page/playQuiz"
 import EnterRoomId from "./page/selectQuizRoom"
 import { AnimatePresence } from "framer-motion"
 import 'bootstrap/dist/css/bootstrap.css';
+import LoginLogoutButton from './page/login';
 
 
 const router = createBrowserRouter([
@@ -16,6 +17,14 @@ const router = createBrowserRouter([
     path: "/",
     element: <EnterRoomId/>,
   },
+  {
+    path: "/login",
+    element: <LoginLogoutButton/>,
+  },
+  // {
+  //   path: "/drawing",
+  //   element: <DrawingCanvas width={400} height={400}/>,
+  // },
 ]);
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
