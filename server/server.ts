@@ -1,6 +1,5 @@
 import Koa from 'koa';
 import express from 'express'
-import Router from 'koa-router';
 import bodyparser from 'body-parser';
 import { instrument } from"@socket.io/admin-ui";
 import cors from 'cors'
@@ -10,8 +9,6 @@ import {v5 as uuid} from 'uuid';
 import {quiz} from "../client/src/state"
 
 const app = express()
-//const app = new Koa();
-const router = new Router();
 const port: number = 3004;
 
 app.use(bodyparser());
@@ -26,13 +23,17 @@ type stuProfile = {
     totalPoint: number
 }
 
+app.get('/api/play/quiz/:quizId', async ctx => {
 
 router.get('/api/play/quiz/:quizId', async ctx => {
+
     let quiz_id = ctx.params
 });
 
-router.get('/api/quiz/:roomId', async ctx => {
-    ctx.body = ctx.params;
+app.get('/api/quiz/:quizId', (req,res) => {
+    console.log("apiiiii")
+    res.send("apiiiiiaai")
+
 });
 
 router.get('/api/login', async ctx => {
