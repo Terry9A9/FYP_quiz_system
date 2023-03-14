@@ -26,11 +26,16 @@ type stuProfile = {
     totalPoint: number
 }
 
+
 router.get('/api/play/quiz/:quizId', async ctx => {
     let quiz_id = ctx.params
 });
 
 router.get('/api/quiz/:roomId', async ctx => {
+    ctx.body = ctx.params;
+});
+
+router.get('/api/login', async ctx => {
     ctx.body = ctx.params;
 });
 
