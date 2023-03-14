@@ -2,7 +2,7 @@ import * as React from 'react';
 import {useState, useEffect} from 'react'
 import webSocket from 'socket.io-client'
 import {useParams} from "react-router-dom";
-import {quiz, profile} from "../state";
+
 import StarsIcon from '@mui/icons-material/Stars';
 import MilitaryTechIcon from '@mui/icons-material/MilitaryTech';
 import SpeedIcon from '@mui/icons-material/Speed';
@@ -27,10 +27,6 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 ChartJS.register(ArcElement, Tooltip, Legend);
 import {quiz, profile, userProfile} from "../state";
 import _ from 'lodash'
-import {Container, Row, Col} from 'react-bootstrap';
-import { makeStyles } from 'tss-react/mui';
-import { experimentalStyled as styled } from '@mui/material/styles';
-import {Button, Snackbar, Grid, Paper , FormControl, RadioGroup} from '@mui/material';
 import MuiAlert, { AlertProps } from '@mui/material/Alert';
 import { getUserData } from './loginFunction';
 
@@ -442,25 +438,6 @@ function PlayQuiz() {
         } else {
             setWaitMsg(true);
         }
-    }
-
-
-    function Rank(){
-        return (
-            <>
-                <Grid container direction="column" alignItems="center" spacing={5}>
-                    <Grid item>
-                        {rankInfo.map((e,index) => (
-                            <>
-                                <Item>
-                                    {index+1}. {user.displayName} {e.totalPoint}
-                                </Item>
-                            </>
-                        ))}
-                    </Grid>
-                </Grid>
-            </>
-        )
     }
 
     const handleMouseLeave = () => {

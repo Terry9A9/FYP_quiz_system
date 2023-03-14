@@ -204,7 +204,7 @@ export function liveQuiz(io) {
                         },
                     ]
                 }
-            let rankIndex = roomArr.leaderboard.findIndex((e) => e.playerId === socket.id)
+            let rankIndex = roomArr.leaderboard?.findIndex((e) => e.playerId === socket.id)
             if ( rankIndex != -1){
                 roomArr.leaderboard[rankIndex] = data
             }else{
