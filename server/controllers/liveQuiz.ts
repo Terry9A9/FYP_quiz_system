@@ -15,14 +15,16 @@ const assert = require('assert');
 
 
 let roomArr =
-    [
         {
             id: "weggiwyer4234",
             room_id: 1234,
             status: false,
             public: false,
             password:"",
+            quiz_id: "fghj3w5",
             allow_emoji_popup: true,
+            create_time: "123123123", //unix
+            finish_time: "1233636", //unix
             leaderboard:[
                 {
                     playerId: "435yrhgert",
@@ -89,30 +91,32 @@ let roomArr =
                             ans: ["test","test1"]
                         },
                     ]
-
                 },
             ],
-            player:[
+            players:[
                 {
                     playerId: "435yrhgert",
                     userName: "terry",
                     badge:[],
+                    rank: 1,
+                    mouseLeveTime: 12,
+                    mouseLeveCount:2
                 },
                 {
                     playerId: "fghj039845",
                     userName: "c",
-                    badge:[]
+                    badge:[],
+                    rank:3
                 },
                 {
                     playerId: "ghjk5u23",
                     userName: "b",
-                    badge:[]
+                    badge:[],
+                    rank:3
                 },
-
             ],
-
         }
-    ]
+
 
 export function liveQuiz(io) {
 
@@ -120,8 +124,16 @@ export function liveQuiz(io) {
 
         socket.on('join-room', (roomId) => {
             socket.join(roomId);
-            socket.emit('join-room-message', `You've join ${roomId} room`);
-            io.sockets.to(roomId).emit('room-brocast', `${socket.id} has join this room`);
+            const myInfo = {
+                playerId: socket.id,
+                userName: socket.id,
+                badge:[],
+                rank:3
+            }
+            let index = roomArr.players.findIndex(x => x.playerId == socket.id);
+            index === -1 && roomArr.players.push(myInfo)
+            socket.emit('join-room-message', myInfo);
+            io.sockets.to(roomId).emit('room-info', roomArr);
         });
 
         socket.on('create-room', () => {
@@ -136,7 +148,6 @@ export function liveQuiz(io) {
             dbconnect((data) => {
                 quiz = data;
                 console.log(`here is socket quiz: ${JSON.stringify(quiz)}`)
-                console.log(`here is socket quiz2: ${JSON.stringify(quiz)}`)
                 io.sockets.to(roomId).emit('room-brocast', `Quiz start`);
                 //io.sockets.to(roomId).emit('quiz', quiz);
                 io.sockets.to(roomId).emit('quiz-start', quiz);
@@ -159,7 +170,6 @@ export function liveQuiz(io) {
                     console.log('end_timer')
                 }, quiz.time)
             })
-
         })
 
         socket.on('ans_submit', ({questionNum: questionNum, quizId: quizId, ans: selectedAnsIndex, roomId: roomId}) => {
@@ -171,18 +181,40 @@ export function liveQuiz(io) {
             })
         })
 
-        socket.on('point_submit', ({roomId: roomId, totalPoint: totalPoint}) => {
-            let data = {socketId: socket.id, totalPoint: totalPoint}
-            let rankIndex = rankPointArr.findIndex((e:{socketId:string}) => e.socketId === socket.id)
+        socket.on('point-submit', ({roomId: roomId, totalPoint: totalPoint}) => {
+            let data = {
+                    playerId: socket.id,
+                        userName: socket.id,
+                    totalPoint: totalPoint,
+                    answered_question:[
+                        {
+                            type:"mc",
+                            correct: true,
+                            ans: ["1"] //mc index
+                        },
+                        {
+                            type:"fill",
+                            correct: true,
+                            ans: ["test","test1"]
+                        },
+                        {
+                            type:"t&f",
+                            correct: true,
+                            ans: ["test","test1"]
+                        },
+                    ]
+                }
+            let rankIndex = roomArr.leaderboard.findIndex((e) => e.playerId === socket.id)
             if ( rankIndex != -1){
-                rankPointArr[rankIndex] = data
+                roomArr.leaderboard[rankIndex] = data
             }else{
-                rankPointArr.push(data)
+                roomArr.leaderboard.push(data)
             }
-            rank[roomId] = rankPointArr
+            rank[roomId] = roomArr.leaderboard
             rank[roomId].sort((a,b)=> b.totalPoint - a.totalPoint)
-            io.sockets.to(roomId).emit('show-rank', {status: true , info: rank[roomId]});
-            console.log(JSON.stringify(rank).toString())
+            roomArr.leaderboard =
+            io.sockets.to(roomId).emit('show-rank', {status: true , info: rank[roomId].slice(0,5)});
+            console.log("rank: "+JSON.stringify(rank).toString())
         })
     })
 
