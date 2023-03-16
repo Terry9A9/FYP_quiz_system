@@ -10,7 +10,7 @@ import { makeStyles } from 'tss-react/mui';
 import { experimentalStyled as styled } from '@mui/material/styles';
 import {Button, Snackbar, Grid, Paper , FormControl, RadioGroup} from '@mui/material';
 import MuiAlert, { AlertProps } from '@mui/material/Alert';
-import { getUserData } from './loginFunction';
+import { getUserData } from '../../../server/controllers/loginFunction';
 
 const useStyles = makeStyles()((theme) => {
     return {
