@@ -106,6 +106,7 @@ function PlayQuiz() {
     const [roomMsg, setRoomMsg] = useState("" as string)
     const [roomInfo, setRoomInfo] = useState({})
     const [showRoomMsg, setShowRoomMsg] = useState(false as boolean)
+    const [isHost, setIsHost] = useState(true as boolean)
     //anit cheating
     const [mouseMsg, setMouseMsg] = useState("" as string)
     const [OutCount,setOutCount] = useState(0 as number)
@@ -162,6 +163,9 @@ function PlayQuiz() {
             }, 1000)
             return () => clearInterval(timer);
         } else if (times == 0){
+            if (isHost) {
+                ws.emit('end-timer', {roomId: roomId});
+            }
             submit_ans()
             setWaitMsg(false)
         }
@@ -212,7 +216,7 @@ function PlayQuiz() {
                             }}
                         >
                             {roomInfo.players && roomInfo?.players.map((e) =>
-                               ( <Item elevation={1} style={{textAlign: "center", width:"100%"}}>
+                                ( <Item elevation={1} style={{textAlign: "center", width:"100%"}}>
                                     {e.userName}
                                 </Item>)
                             )}
@@ -342,6 +346,10 @@ function PlayQuiz() {
             )
     }
 
+    let endTimer = () => {
+        ws.emit('end-timer', {roomId: roomId});
+    }
+
     function NextButton() {
         return (
             <div className={classes.center} style={{float:"right"}}>
@@ -350,7 +358,7 @@ function PlayQuiz() {
                     whileHover={{ scale: 1.2 }}
                     whileTap={{ scale: 0.9 }}
                     transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                    onClick={nextQuestion}
+                    onClick={!showRank ? endTimer : nextQuestion}
                     style={{backgroundColor: "#94bbe9"}}
                 >
                     Next Question
@@ -475,12 +483,10 @@ function PlayQuiz() {
                 <Container>
                     <Row>
                         <Col>
-                            {joinedRoom && joinRoomMsg()}
-                        </Col>
-                    </Row>
-                    <Row>
-                        <Col>
-                            <div style={{height:"12vh", backgroundColor:"red", marginBottom:"1vh"}}>Info</div>
+                            <div style={{height:"12vh", backgroundColor:"red", marginBottom:"1vh"}}>
+                                {joinedRoom && joinRoomMsg()}
+                            </div>
+
                         </Col>
                     </Row>
                     <Row>
