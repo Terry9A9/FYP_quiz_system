@@ -76,12 +76,24 @@ app.post('/api/login', async(req,res) => {
                 console.log(`Found User: ${getUserData[0].display_name}`);
                 console.log(`User role: ${getUserData[0].role}`);
                 res.json({role:getUserData[0].role});
+                client.close();
             } else { //If user not found in database, role "student" will be assigned
-                console.log(`[role] No User found in record, assign role "student" to this user`);
+                console.log(`[role] No User found in record, assign role "student" to this user and add to database`);
+                // load the data to database
+                const data = {
+                    display_name: user.displayName,
+                    email: user.mail,
+                    role: "student",
+                    oid: idTokenClaims.oid
+                }
+                db.collection('User').insertOne(data, function (err, collection) {
+                    if (err) throw err;
+                    console.log(`[User] Record inserted Successfully: ${JSON.stringify(loginData)}`);
+                });
                 res.json({role:"student"});
+                client.close();
             }
         });
-        client.close();
     });
 });
 
