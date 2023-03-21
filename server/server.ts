@@ -33,7 +33,7 @@ type stuProfile = {
 
 app.get('/api/play/quiz/:quizId', async ctx => {})
 
-app.get('/api/play/quiz/:quizId', async ctx => {
+app.get('/api/play/quiz/:quizId', async ctx => {})
 
 app.get('/api/play/quiz/:quizId', (req,res) => {
     let quiz_id = req.params
