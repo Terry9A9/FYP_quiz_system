@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@mui/material';
 import { makeStyles } from 'tss-react/mui';
 import { useNavigate } from 'react-router-dom';
-import { handleLogin, handleLogout, msalInstance, getUserData} from './loginFunction';
+import { handleLogin, handleLogout, msalInstance, getUserData} from '../../../server/controllers/loginFunction';
 
 
 const useStyles = makeStyles()((theme) => {
@@ -33,21 +33,27 @@ const LoginLogoutButton: React.FC = () => {
       setIsLoading(false);
       navigate('/login');
     });
+    }else {
+      setIsLoading(false);
     }
-  }, []);
+  }, [user]);
 
   async function login() {
     // Set the user profile state
-      const user = handleLogin();
-      setUser(await user);
+      const userData = handleLogin();
+      console.log("Running handleLogin");
+      setIsLoading(true);
+      setUser(await userData);
+      console.log("running setUser")
       navigate('/login');
+      console.log("running navigate")
     }
-
-    function logout() {
-        handleLogout();
-        setUser(null);
-        navigate('/login');
-    }
+    
+  function logout() {
+      handleLogout();
+      setUser(null);
+      navigate('/login');
+  }
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -64,6 +70,7 @@ const LoginLogoutButton: React.FC = () => {
     <div className={classes.root}>
       <h2>{user.displayName}</h2>
       <p>{user.mail}</p>
+      <p>{user.role}</p>
       <Button variant='contained' color='primary' onClick={logout}>Logout</Button>
       <p>{JSON.stringify(user)}</p>
     </div>

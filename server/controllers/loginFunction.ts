@@ -52,11 +52,27 @@ export async function handleLogin () {
         }
       });
       const user = await response.json();
+
       // Store the login data in the localStorage
       localStorage.setItem("loginData", JSON.stringify(tokenResult));
-      console.log("The token result of login is:", JSON.stringify(tokenResult));
-      return user;
 
+      //send the data to server-side
+      const roleRes = await fetch('http://localhost:3004/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          idTokenClaims: JSON.stringify(tokenResult.idTokenClaims) , 
+          user: JSON.stringify(user) })
+      })
+
+      //get and set the role of login user return from server
+      const role = await roleRes.json();
+      user["role"] = role.role;
+      // console.log(`[loginfunction.ts] role: ${JSON.stringify(role.role)}`);
+        
+      return user;
     }
   } catch (error) {
     console.error(error);
@@ -98,6 +114,21 @@ export const getUserData = async () => {
               }
             });
             const user = await response.json();
+
+            const roleRes = await fetch('http://localhost:3004/api/get-role', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                idTokenClaims: JSON.stringify(tokenResult.idTokenClaims)
+              })
+            })
+            //get and set the role of login user return from server
+            const role = await roleRes.json();
+            user["role"] = role.role;
+            console.log(`[loginfunction.ts] role: ${JSON.stringify(role.role)}`);
+      
             return user;
           }
     } catch (error) {

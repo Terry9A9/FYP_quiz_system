@@ -28,7 +28,7 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 import {quiz, profile, userProfile} from "../state";
 import _ from 'lodash'
 import MuiAlert, { AlertProps } from '@mui/material/Alert';
-import { getUserData } from './loginFunction';
+import { getUserData } from '../../../server/controllers/loginFunction';
 
 const useStyles = makeStyles()((theme) => {
     return {

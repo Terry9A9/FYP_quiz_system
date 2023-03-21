@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { TextField, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { makeStyles } from 'tss-react/mui';
-import { handleLogin, handleLogout, getUserData } from './loginFunction';
+import { handleLogin, handleLogout, getUserData } from '../../../server/controllers/loginFunction';
 import {userProfile} from "../state";
 import _ from 'lodash'
 
