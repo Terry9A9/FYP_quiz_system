@@ -1,6 +1,5 @@
 import Koa from 'koa';
 import express from 'express'
-import Router from 'koa-router';
 import bodyparser from 'body-parser';
 import { instrument } from"@socket.io/admin-ui";
 import cors from 'cors'
@@ -11,8 +10,6 @@ import {quiz} from "../client/src/state"
 import { getUserData, handleLogin } from './controllers/loginFunction';
 
 const app = express()
-//const app = new Koa();
-const router = new Router();
 const port: number = 3004;
 
 app.use(bodyparser.json());
@@ -34,6 +31,9 @@ type stuProfile = {
     totalPoint: number
 }
 
+app.get('/api/play/quiz/:quizId', async ctx => {})
+
+app.get('/api/play/quiz/:quizId', async ctx => {
 
 app.get('/api/play/quiz/:quizId', (req,res) => {
     let quiz_id = req.params
@@ -121,6 +121,7 @@ app.post('/api/get-role', async(req,res) => {
         });
         client.close();
     });
+
 });
 
 const server = app.listen(port, () => {

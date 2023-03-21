@@ -18,11 +18,14 @@ let roomArr =
     [
         {
             id: "weggiwyer4234",
-            room_id: 1234,
+            room_id: "1234",
             status: false,
             public: false,
             password:"",
+            quiz_id: "fghj3w5",
             allow_emoji_popup: true,
+            create_time: "123123123", //unix
+            finish_time: "1233636", //unix
             leaderboard:[
                 {
                     playerId: "435yrhgert",
@@ -89,30 +92,12 @@ let roomArr =
                             ans: ["test","test1"]
                         },
                     ]
-
                 },
             ],
-            player:[
-                {
-                    playerId: "435yrhgert",
-                    userName: "terry",
-                    badge:[],
-                },
-                {
-                    playerId: "fghj039845",
-                    userName: "c",
-                    badge:[]
-                },
-                {
-                    playerId: "ghjk5u23",
-                    userName: "b",
-                    badge:[]
-                },
-
-            ],
-
         }
     ]
+
+
 
 export function liveQuiz(io) {
 
@@ -120,8 +105,22 @@ export function liveQuiz(io) {
 
         socket.on('join-room', (roomId) => {
             socket.join(roomId);
-            socket.emit('join-room-message', `You've join ${roomId} room`);
-            io.sockets.to(roomId).emit('room-brocast', `${socket.id} has join this room`);
+            const myInfo = {
+                playerId: socket.id,
+                userName: socket.id,
+                rank:3,
+                totalPoint: 1000,
+                answered_question:[]
+            }
+            let roomIndex = roomArr.findIndex((e) => e.room_id === roomId)
+            if (roomIndex == -1){
+                console.log("room not found")
+            }else{
+                let index = roomArr[roomIndex].leaderboard.findIndex(x => x.playerId == socket.id);
+                index === -1 && roomArr[roomIndex].leaderboard.push(myInfo)
+                socket.emit('join-room-message', myInfo);
+                io.sockets.to(roomId).emit('room-info', roomArr[roomIndex]);
+            }
         });
 
         socket.on('create-room', () => {
@@ -136,16 +135,16 @@ export function liveQuiz(io) {
             dbconnect((data) => {
                 quiz = data;
                 console.log(`here is socket quiz: ${JSON.stringify(quiz)}`)
-                console.log(`here is socket quiz2: ${JSON.stringify(quiz)}`)
                 io.sockets.to(roomId).emit('room-brocast', `Quiz start`);
                 //io.sockets.to(roomId).emit('quiz', quiz);
                 io.sockets.to(roomId).emit('quiz-start', quiz);
                 io.sockets.to(roomId).emit('timerStatus', {status: true , time: quiz.time});
-                setTimeout(()=>{
-                    io.sockets.to(roomId).emit('timerStatus', {status: false , time: 0});
-                    console.log('end_timer')
-                }, quiz.time)
             })
+        })
+
+        socket.on('end-timer',({roomId:roomId}) => {
+            io.sockets.to(roomId).emit('timerStatus', {status: false , time: 0});
+            console.log('end_timer')
         })
 
         socket.on('next-question', ({roomId:roomId, questionNum:questionNum, quizId: quizId}) => {
@@ -154,12 +153,7 @@ export function liveQuiz(io) {
                 quiz = data;
                 io.sockets.to(roomId).emit('next-question', questionNum);
                 io.sockets.to(roomId).emit('timerStatus', {status: true , time: quiz.time});
-                setTimeout(()=>{
-                    io.sockets.to(roomId).emit('timerStatus', {status: false , time: 0});
-                    console.log('end_timer')
-                }, quiz.time)
             })
-
         })
 
         socket.on('ans_submit', ({questionNum: questionNum, quizId: quizId, ans: selectedAnsIndex, roomId: roomId}) => {
@@ -171,18 +165,40 @@ export function liveQuiz(io) {
             })
         })
 
-        socket.on('point_submit', ({roomId: roomId, totalPoint: totalPoint}) => {
-            let data = {socketId: socket.id, totalPoint: totalPoint}
-            let rankIndex = rankPointArr.findIndex((e:{socketId:string}) => e.socketId === socket.id)
+        socket.on('point-submit', ({roomId: roomId, totalPoint: totalPoint}) => {
+            let data = {
+                playerId: socket.id,
+                userName: socket.id,
+                totalPoint: totalPoint,
+                answered_question:[
+                    {
+                        type:"mc",
+                        correct: true,
+                        ans: ["1"] //mc index
+                    },
+                    {
+                        type:"fill",
+                        correct: true,
+                        ans: ["test","test1"]
+                    },
+                    {
+                        type:"t&f",
+                        correct: true,
+                        ans: ["test","test1"]
+                    },
+                ]
+            };
+            let roomIndex = roomArr.findIndex((e) => e.room_id === roomId)
+            let rankIndex = roomArr[roomIndex].leaderboard?.findIndex((e) => e.playerId === socket.id)
             if ( rankIndex != -1){
-                rankPointArr[rankIndex] = data
+                roomArr[roomIndex].leaderboard[rankIndex] = data
             }else{
-                rankPointArr.push(data)
+                roomArr[roomIndex].leaderboard.push(data)
             }
-            rank[roomId] = rankPointArr
+            rank[roomId] = roomArr[roomIndex].leaderboard
             rank[roomId].sort((a,b)=> b.totalPoint - a.totalPoint)
-            io.sockets.to(roomId).emit('show-rank', {status: true , info: rank[roomId]});
-            console.log(JSON.stringify(rank).toString())
+            io.sockets.to(roomId).emit('show-rank', {status: true , info: rank[roomId].slice(0,5)});
+            console.log("rank: "+JSON.stringify(rank).toString())
         })
     })
 
