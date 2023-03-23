@@ -215,7 +215,7 @@ function PlayQuiz() {
                                 gap: 2,
                             }}
                         >
-                            {roomInfo.players && roomInfo?.players.map((e) =>
+                            {roomInfo.leaderboard && roomInfo?.leaderboard.map((e) =>
                                 ( <Item elevation={1} style={{textAlign: "center", width:"100%"}}>
                                     {e.userName}
                                 </Item>)
