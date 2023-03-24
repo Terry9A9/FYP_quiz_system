@@ -6,9 +6,8 @@ import cors from 'cors'
 
 import {liveQuiz} from './controllers/liveQuiz';
 import {v5 as uuid} from 'uuid';
-import {quiz} from "../client/src/state"
+import {quiz,Room} from "../client/src/state"
 import { getUserData, handleLogin } from './controllers/loginFunction';
-
 const app = express()
 const port: number = 3004;
 
@@ -124,6 +123,36 @@ app.post('/api/get-role', async(req,res) => {
 
 });
 
+app.post('/api/rooms', async (req, res) => {
+    const { room_name, quiz_id, ispublic, password, allow_emoji_popup, create_time } = req.body;
+  
+    // Generate random room ID
+    const room_id = Math.floor(Math.random() * 999999) + 1;
+  
+    // Create new room object
+    const newRoom = {
+      room_id,
+      room_name,
+      status: true,
+      ispublic,
+      password,
+      quiz_id,
+      allow_emoji_popup,
+      create_time,
+      finish_time: '',
+      leaderboard: []
+    };
+    
+    const client = new MongoClient(mongourl, {useNewUrlParser: true, useUnifiedTopology: true});
+    await client.connect((err) => {
+        const db = client.db(dbName);
+        db.collection('Rooms').insertOne(newRoom, function (err, collection) {
+            if (err) throw err;
+            console.log(`[Rooms] Record inserted Successfully: ${JSON.stringify(newRoom)}`);
+        });
+    });
+    client.close();
+  });
 const server = app.listen(port, () => {
     console.log(`Server start at port http://localhost:${port}`)
 });
@@ -139,4 +168,7 @@ instrument(io, {
     auth: false
 });
 
+
+
+  
 liveQuiz(io)

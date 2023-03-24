@@ -34,3 +34,29 @@ export type profile = {
 export type userProfile = {
     displayName: string
 }
+
+export type Room = {
+    room_id: string,
+    room_name: string,
+    status: boolean,
+    public: boolean,
+    password:string,
+    quiz_id:string,
+    allow_emoji_popup:boolean,
+    create_time: string,
+    finish_time: string,
+    leaderboard: leaderboard[],
+}
+
+export type leaderboard ={
+    playerId:string,
+    userName:string,
+    totalPoint:number,
+    answered_question:answered_question 
+}
+
+export type answered_question = {
+    type:string,
+    correct:boolean,
+    ans:string[],
+}

@@ -7,7 +7,7 @@ import { AnimatePresence } from "framer-motion"
 import 'bootstrap/dist/css/bootstrap.css';
 import LoginLogoutButton from './page/login';
 
-
+import CreateRoomForm from './page/CRoom';
 const router = createBrowserRouter([
   {
     path: "/play/quiz/:roomId",
@@ -20,6 +20,9 @@ const router = createBrowserRouter([
   {
     path: "/login",
     element: <LoginLogoutButton/>,
+  },{
+    path: "/CRoom",
+    element: <CreateRoomForm/>,
   },
   // {
   //   path: "/drawing",
