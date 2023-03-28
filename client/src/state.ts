@@ -35,7 +35,7 @@ export type userProfile = {
     displayName: string
 }
 
-export type Room = {
+export type room = {
     room_id: string,
     room_name: string,
     status: boolean,
@@ -52,7 +52,9 @@ export type leaderboard ={
     playerId:string,
     userName:string,
     totalPoint:number,
-    answered_question:answered_question 
+    mouseleaveTime:number,
+    mouseleaveCount:number,
+    answered_question:answered_question[]
 }
 
 export type answered_question = {

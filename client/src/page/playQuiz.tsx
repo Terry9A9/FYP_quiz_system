@@ -25,7 +25,7 @@ import { Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
-import {quiz, profile, userProfile} from "../state";
+import {quiz, profile, userProfile, leaderboard, answered_question} from "../state";
 import _ from 'lodash'
 import MuiAlert, { AlertProps } from '@mui/material/Alert';
 import { getUserData } from '../../../server/controllers/loginFunction';
@@ -93,7 +93,7 @@ function PlayQuiz() {
     const [selectedAnsIndex, setSelectedAnsIndex] = useState(-1 as number)
     const [totalPoint, setTotalPoint] = useState(0 as number)
     const [showRank, setShowRank] = useState(false as boolean)
-    const [rankInfo, setRankInfo] = useState([] as profile[])
+    const [rankInfo, setRankInfo] = useState([] as leaderboard[])
     const [waitMsg, setWaitMsg] = useState(false as boolean)
     const [nickName, setNickName] = useState("" as string)
     const [isStart, setIsStart] = useState(false as boolean)
@@ -162,7 +162,8 @@ function PlayQuiz() {
                 setTimes((times) => times - 1)
             }, 1000)
             return () => clearInterval(timer);
-        } else if (times == 0){
+        } 
+        else if (times == 0){
             if (isHost) {
                 ws.emit('end-timer', {roomId: roomId});
             }
@@ -254,22 +255,16 @@ function PlayQuiz() {
                 </Row>
                 <Row>
                     <Col>
-                        {questionSet[questionNum]?.answers.map((q, index) =>
+                        {questionSet[questionNum]?.answers.map((question, index) =>
                             <>
-                                <label id={q}>{q}</label>
-                                <input type="radio" key={index} id={q} name="question" value={index}
-                                       onChange={() => setSelectedAnsIndex(index)}
-                                       checked={selectedAnsIndex == index}/>
+                                <Button onClick={() => {setSelectedAnsIndex(index);setWaitMsg(true)}}
+                                       variant="contained" color="primary">
+                                       {question}{index}
+                                </Button>
+                                <br/>
                                 <br/>
                             </>
                         )}
-                    </Col>
-                </Row>
-                <Row>
-                    <Col>
-                        <Button variant="contained" color="primary" onClick={submit_ans}>
-                            Submit
-                        </Button>
                     </Col>
                 </Row>
             </>
@@ -377,8 +372,9 @@ function PlayQuiz() {
     const initWebSocket = () => {
         ws.on('connect', () => {
             if (roomId) {
-                ws.emit('join-room', roomId);
-                console.log('join-room')
+                const stdId = JSON.parse(localStorage.getItem("loginData")).account.name;
+                ws.emit('join-room', roomId,stdId);
+                console.log('join-room',stdId)
                 setJoinedRoom(true)
 
             } else {
@@ -431,9 +427,8 @@ function PlayQuiz() {
         ws.emit('next-question', {roomId: roomId, questionNum: questionNum + 1, quizId: quizId});
     }
 
-    const submit_ans = () => {
+    function submit_ans () {
         if (!timerStatus) {
-
             let point = totalPoint
             console.log(selectedAnsIndex+"sel")
             if (selectedAnsIndex == questionSet[questionNum]?.correct) {
@@ -486,7 +481,7 @@ function PlayQuiz() {
                             <div style={{height:"12vh", backgroundColor:"red", marginBottom:"1vh"}}>
                                 {joinedRoom && joinRoomMsg()}
                             </div>
-
+                            {console.log(roomInfo)}
                         </Col>
                     </Row>
                     <Row>
