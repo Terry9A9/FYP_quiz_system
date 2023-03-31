@@ -1,5 +1,5 @@
 import {v5 as uuid} from 'uuid';
-import { quiz } from '../../client/src/state'
+import { quiz, room } from '../../client/src/state'
 type stuProfile = {
     socketId: string,
     totalPoint: number
@@ -14,116 +14,45 @@ const dbName = 'FYP_DATA';
 const assert = require('assert');
 
 
-let roomArr =
-    [
-        {
-            id: "weggiwyer4234",
-            room_id: "1234",
-            status: false,
-            public: false,
-            password:"",
-            quiz_id: "fghj3w5",
-            allow_emoji_popup: true,
-            create_time: "123123123", //unix
-            finish_time: "1233636", //unix
-            leaderboard:[
-                {
-                    playerId: "435yrhgert",
-                    userName: "a",
-                    totalPoint: 1700,
-                    answered_question:[
-                        {
-                            type:"mc",
-                            correct: true,
-                            ans: ["1"] //mc index
-                        },
-                        {
-                            type:"fill",
-                            correct: true,
-                            ans: ["test","test1"]
-                        },
-                        {
-                            type:"t&f",
-                            correct: true,
-                            ans: ["test","test1"]
-                        },
-                    ]
-                },
-                {
-                    playerId: "ghjk5u23",
-                    userName: "b",
-                    totalPoint: 1500,
-                    answered_question:[
-                        {
-                            type:"mc",
-                            correct: true,
-                            ans: ["1"] //mc index
-                        },
-                        {
-                            type:"fill",
-                            correct: true,
-                            ans: ["test","test1"]
-                        },
-                        {
-                            type:"t&f",
-                            correct: true,
-                            ans: ["test","test1"]
-                        },
-                    ]
-                },
-                {
-                    playerId: "fghj039845",
-                    userName: "c",
-                    totalPoint: 1000,
-                    answered_question:[
-                        {
-                            type:"mc",
-                            correct: true,
-                            ans: ["1"] //mc index
-                        },
-                        {
-                            type:"fill",
-                            correct: true,
-                            ans: ["test","test1"]
-                        },
-                        {
-                            type:"t&f",
-                            correct: true,
-                            ans: ["test","test1"]
-                        },
-                    ]
-                },
-            ],
-        }
-    ]
-
+let roomArr = [] as room[]
 
 
 export function liveQuiz(io) {
 
     io.on('connect', async (socket) => {
 
-        socket.on('join-room', (roomId) => {
+        socket.on('join-room', (roomId, studId) => {
             socket.join(roomId);
+            let roomIndex = roomArr.findIndex(x => x.room_id == roomId)
             const myInfo = {
-                playerId: socket.id,
-                userName: socket.id,
-                rank:3,
-                totalPoint: 1000,
+                playerId:socket.id,
+                userName:studId || 'anonymous',
+                totalPoint:0,
+                mouseleaveTime:0,
+                mouseleaveCount:0,
                 answered_question:[]
             }
-            let roomIndex = roomArr.findIndex((e) => e.room_id === roomId)
-            if (roomIndex == -1){
-                console.log("room not found")
-            }else{
-                let index = roomArr[roomIndex].leaderboard.findIndex(x => x.playerId == socket.id);
+            if (roomIndex === -1){
+                dbconnect("room", roomId,(roomInfo) => {
+                    let roomIndex = roomArr.findIndex(x => x.room_id == roomId)
+                    roomIndex === -1 && roomArr.push(roomInfo) // if room not exist in roomArr then push it
+
+                    let index = roomInfo.leaderboard.findIndex(x => x.userName == studId);
+                    index === -1 && roomInfo.leaderboard.push(myInfo) // if user not exist in leaderboard then push it
+
+                    socket.emit('join-room-message', myInfo);
+                    io.sockets.to(roomId).emit('room-info', roomInfo);
+                    console.log(roomArr)
+                })  
+            }else {
+                let index = roomArr[roomIndex].leaderboard.findIndex(x => x.userName == studId);
                 index === -1 && roomArr[roomIndex].leaderboard.push(myInfo)
                 socket.emit('join-room-message', myInfo);
                 io.sockets.to(roomId).emit('room-info', roomArr[roomIndex]);
             }
         });
 
-        socket.on('create-room', () => {
+        socket.on('create-room', () => { //ignore this
             const roomId = uuid(`${Date.now()}`, uuid.DNS);
             socket.join(roomId);
             socket.emit('join-room-message', `You've join ${roomId} room`);
@@ -132,78 +61,49 @@ export function liveQuiz(io) {
 
         socket.on('quiz-start', ({roomId:roomId, quizId:quizId}) => {
             let quiz:quiz
-            dbconnect((data) => {
+            let roomIndex = roomArr.findIndex(x => x.room_id == roomId);
+            roomArr[roomIndex].status = true;
+            dbconnect("quiz", quizId,(data) => {
                 quiz = data;
                 console.log(`here is socket quiz: ${JSON.stringify(quiz)}`)
                 io.sockets.to(roomId).emit('room-brocast', `Quiz start`);
-                //io.sockets.to(roomId).emit('quiz', quiz);
                 io.sockets.to(roomId).emit('quiz-start', quiz);
                 io.sockets.to(roomId).emit('timerStatus', {status: true , time: quiz.time});
             })
         })
 
+        // when timer end, emit end-timer to client
         socket.on('end-timer',({roomId:roomId}) => {
             io.sockets.to(roomId).emit('timerStatus', {status: false , time: 0});
             console.log('end_timer')
         })
 
-        socket.on('next-question', ({roomId:roomId, questionNum:questionNum, quizId: quizId}) => {
-            let quiz:quiz
-            dbconnect((data) => {
-                quiz = data;
-                io.sockets.to(roomId).emit('next-question', questionNum);
-                io.sockets.to(roomId).emit('timerStatus', {status: true , time: quiz.time});
-            })
+        socket.on('next-question', ({roomId:roomId, questionNum:questionNum, time: time}) => {
+            let roomIndex = roomArr.findIndex(x => x.room_id == roomId);
+            roomArr[roomIndex].question_num = questionNum;
+            io.sockets.to(roomId).emit('next-question', questionNum);
+            io.sockets.to(roomId).emit('timerStatus', {status: true , time: time});
         })
 
-        socket.on('ans_submit', ({questionNum: questionNum, quizId: quizId, ans: selectedAnsIndex, roomId: roomId}) => {
-            let quiz:quiz
-            dbconnect((data) => {
-                if(quiz.question_set[questionNum].correct == selectedAnsIndex){
-                    socket.emit('point', quiz.question_set[questionNum].point);
-                }
-            })
-        })
-
-        socket.on('point-submit', ({roomId: roomId, totalPoint: totalPoint}) => {
-            let data = {
-                playerId: socket.id,
-                userName: socket.id,
-                totalPoint: totalPoint,
-                answered_question:[
-                    {
-                        type:"mc",
-                        correct: true,
-                        ans: ["1"] //mc index
-                    },
-                    {
-                        type:"fill",
-                        correct: true,
-                        ans: ["test","test1"]
-                    },
-                    {
-                        type:"t&f",
-                        correct: true,
-                        ans: ["test","test1"]
-                    },
-                ]
-            };
+        // when count down end client submit the total point then we rank it and update the leaderboard
+        socket.on('point-submit', ({roomId: roomId, totalPoint: totalPoint, myInfo: myInfo}) => { 
             let roomIndex = roomArr.findIndex((e) => e.room_id === roomId)
-            let rankIndex = roomArr[roomIndex].leaderboard?.findIndex((e) => e.playerId === socket.id)
+            let rankIndex = roomArr[roomIndex].leaderboard?.findIndex((e) => e.userName === myInfo.userName)
             if ( rankIndex != -1){
-                roomArr[roomIndex].leaderboard[rankIndex] = data
+                roomArr[roomIndex].leaderboard[rankIndex] = myInfo
             }else{
-                roomArr[roomIndex].leaderboard.push(data)
+                roomArr[roomIndex].leaderboard.push(myInfo)
             }
             rank[roomId] = roomArr[roomIndex].leaderboard
             rank[roomId].sort((a,b)=> b.totalPoint - a.totalPoint)
-            io.sockets.to(roomId).emit('show-rank', {status: true , info: rank[roomId].slice(0,5)});
+            roomArr[roomIndex].leaderboard = rank[roomId]
+            io.sockets.to(roomId).emit('show-rank', {status: true , info: rank[roomId].slice(0,5), roomInfo: roomArr[roomIndex]});
             console.log("rank: "+JSON.stringify(rank).toString())
         })
     })
 
 
-    const dbSearch = (db, criteria, callback) => {
+    const dbSearchQuiz = (db, criteria, callback) => {
         let getQuizData = {};
         let cursor = db.collection('Quiz').find(criteria).project({_id:0});
         console.log(`findDocument: ${JSON.stringify(criteria)}`);
@@ -214,8 +114,32 @@ export function liveQuiz(io) {
         });
     }
 
-    const dbconnect = (callback) => {
-        let fetchData = {};
+    const dbSearchRoom = (db, criteria, callback) => {
+        let getRoomData = {};
+        let cursor = db.collection('Rooms').find(criteria).project({_id:0});
+        console.log(`findDocument: ${JSON.stringify(criteria)}`);
+        cursor.toArray((err,getRoomData) => {
+            assert.equal(err,null);
+            console.log(`Number Of Document Found: ${getRoomData.length}`);
+            callback(getRoomData[0]) as quiz;
+        });
+    }
+
+    const dbUpdateRoom = (db, criteria, callback) => {
+        let getRoomData = {};
+        let cursor = db.collection('Rooms').update(criteria)
+        console.log(`findDocument: ${JSON.stringify(criteria)}`);
+        cursor.toArray((err,getRoomData) => {
+            assert.equal(err,null);
+            console.log(`Number Of Document Found: ${getRoomData.length}`);
+            callback(getRoomData[0]) as quiz;
+        });
+    }
+
+
+    const dbconnect = (queryTpye, queryValue ,callback) => {
+        let fetchQuizData = {} as quiz;
+        let fetchRoomData = {} as room;
         const client = new MongoClient(mongourl, {useNewUrlParser: true, useUnifiedTopology: true});
         client.connect((err) => {
             assert.equal(null, err);
@@ -223,16 +147,34 @@ export function liveQuiz(io) {
             const db = client.db(dbName);
 
             //find quiz with passing the search criteria
-            console.log(`finding quiz...`);
-            let DOCID = {};
-            DOCID['_id'] = ObjectID('63df677c25278606dc2881f5');
+            console.log(queryTpye)
 
-            dbSearch(db, DOCID, (getQuizData) => {  // docs contain 1 document (hopefully)
-                client.close();
-                console.log("Close DB connection");
-                fetchData = getQuizData;
-                callback(fetchData) as quiz
-            });
+            switch(queryTpye){
+                case "quiz" :
+                    let quizQuery = {};
+                    console.log(`finding quiz...`);
+                    quizQuery['quiz_id'] = queryValue;
+                    dbSearchQuiz(db, quizQuery, (getQuizData) => {  // docs contain 1 document (hopefully)
+                        client.close();
+                        console.log("Close DB connection");
+                        fetchQuizData = getQuizData;
+                        callback(fetchQuizData) as quiz
+                    });
+                    break;
+                
+                case "room":
+                    let roomQuery = {};
+                    console.log(`finding room...`);
+                    roomQuery['room_id']=queryValue;
+                    dbSearchRoom(db, roomQuery, (getRooomData) => {  // docs contain 1 document (hopefully)
+                        client.close();
+                        console.log("Close DB connection");
+                        fetchRoomData = getRooomData;
+                        callback(fetchRoomData) as room
+                    });
+                    break;
+            }
+            
         })
     }
 }

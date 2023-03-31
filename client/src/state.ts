@@ -23,19 +23,14 @@ export type question = {
         | "Drawing",
     img?: string,
     answers: string[],
-    correct: number
-}
-
-export type profile = {
-    socketId:string,
-    totalPoint: number
+    correct: string
 }
 
 export type userProfile = {
     displayName: string
 }
 
-export type Room = {
+export type room = {
     room_id: string,
     room_name: string,
     status: boolean,
@@ -43,16 +38,19 @@ export type Room = {
     password:string,
     quiz_id:string,
     allow_emoji_popup:boolean,
+    question_num: number,
     create_time: string,
     finish_time: string,
-    leaderboard: leaderboard[],
+    leaderboard: profile[],
 }
 
-export type leaderboard ={
+export type profile = {
     playerId:string,
     userName:string,
     totalPoint:number,
-    answered_question:answered_question 
+    mouseleaveTime:number,
+    mouseleaveCount:number,
+    answered_question:answered_question[]
 }
 
 export type answered_question = {

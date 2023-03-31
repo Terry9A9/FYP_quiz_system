@@ -1,4 +1,3 @@
-import Koa from 'koa';
 import express from 'express'
 import bodyparser from 'body-parser';
 import { instrument } from"@socket.io/admin-ui";
@@ -6,7 +5,7 @@ import cors from 'cors'
 
 import {liveQuiz} from './controllers/liveQuiz';
 import {v5 as uuid} from 'uuid';
-import {quiz,Room} from "../client/src/state"
+import {quiz,room} from "../client/src/state"
 import { getUserData, handleLogin } from './controllers/loginFunction';
 const app = express()
 const port: number = 3004;
@@ -127,8 +126,7 @@ app.post('/api/rooms', async (req, res) => {
     const { room_name, quiz_id, ispublic, password, allow_emoji_popup, create_time } = req.body;
   
     // Generate random room ID
-    const room_id = Math.floor(Math.random() * 999999) + 1;
-  
+    const room_id = (Math.floor(Math.random() * 99999999) + 1).toString;
     // Create new room object
     const newRoom = {
       room_id,
