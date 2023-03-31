@@ -23,12 +23,7 @@ export type question = {
         | "Drawing",
     img?: string,
     answers: string[],
-    correct: number
-}
-
-export type profile = {
-    socketId:string,
-    totalPoint: number
+    correct: string
 }
 
 export type userProfile = {
@@ -43,12 +38,13 @@ export type room = {
     password:string,
     quiz_id:string,
     allow_emoji_popup:boolean,
+    question_num: number,
     create_time: string,
     finish_time: string,
-    leaderboard: leaderboard[],
+    leaderboard: profile[],
 }
 
-export type leaderboard ={
+export type profile = {
     playerId:string,
     userName:string,
     totalPoint:number,
