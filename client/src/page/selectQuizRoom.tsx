@@ -24,6 +24,10 @@ import Menu from '@mui/material/Menu';
 import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
 import Typography from "@mui/material/Typography";
+import { handleLogin, handleLogout, getUserData } from '../../../server/controllers/loginFunction';
+import {userProfile} from "../state";
+import _ from 'lodash'
+
 
 const useStyles = makeStyles()((theme) => {
     return {
@@ -55,39 +59,20 @@ const useStyles = makeStyles()((theme) => {
     justifyContent: 'center',
     alignItems: 'center',
   },
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-
-        
-
-
-    }
+  }
 });
 
 
 
 const EnterRoomId = () => {
-    const {classes} = useStyles();
+    const { classes } = useStyles();
     const navigate = useNavigate();
     const [roomId, setRoomId] = useState('');
-
+    const [user, setUser] = useState({} as userProfile);
     const handleSubmit = e => {
         e.preventDefault();
         navigate(`/play/quiz/${roomId}`);
     };
-
 
     const [MenuOpen,setMenuOpen]=useState(false);
     const [anchor,setAnchor]=useState('left');
@@ -99,6 +84,27 @@ const EnterRoomId = () => {
         setMenuOpen(false);
     }
     
+
+
+    // Call the getUserData function when the component loads
+    useEffect(() => {
+        if (_.isEmpty(user)) {
+            getUserData().then(data => {
+                setUser(data);
+            });
+        }
+    }, []);
+
+    async function login() {
+        // Set the user profile state
+        const user = handleLogin();
+        setUser(await user);
+    }
+
+    function logout() {
+        handleLogout();
+        setUser({} as userProfile);
+    }
 
 
     return (
@@ -153,6 +159,17 @@ const EnterRoomId = () => {
 
             <div className={classes.root}>
                 <Row>
+                    <Col>
+                        {user ? (
+                            <>
+                                <p>Welcome, {user.displayName}.</p>
+                                <Button variant='contained' color='primary' onClick={logout}>Logout here</Button>
+                            </>
+                        ) : (
+                            <Button variant='contained' color='primary' onClick={login}>Login with Microsoft Here</Button>
+                        )
+                        }
+                    </Col>
                     <Col>
                     <List
                     sx={{
