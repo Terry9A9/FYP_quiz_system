@@ -16,6 +16,7 @@ const assert = require('assert');
 
 let roomArr = [] as room[]
 
+
 export function liveQuiz(io) {
 
     io.on('connect', async (socket) => {
@@ -25,7 +26,7 @@ export function liveQuiz(io) {
             let roomIndex = roomArr.findIndex(x => x.room_id == roomId)
             const myInfo = {
                 playerId:socket.id,
-                userName:studId,
+                userName:studId || 'anonymous',
                 totalPoint:0,
                 mouseleaveTime:0,
                 mouseleaveCount:0,
@@ -34,25 +35,24 @@ export function liveQuiz(io) {
             if (roomIndex === -1){
                 dbconnect("room", roomId,(roomInfo) => {
                     let roomIndex = roomArr.findIndex(x => x.room_id == roomId)
-                    roomIndex === -1 && roomArr.push(roomInfo)
+                    roomIndex === -1 && roomArr.push(roomInfo) // if room not exist in roomArr then push it
+
                     let index = roomInfo.leaderboard.findIndex(x => x.userName == studId);
-                    index === -1 && roomInfo.leaderboard.push(myInfo)
-                    socket.emit('join-room-message', roomInfo);
+                    index === -1 && roomInfo.leaderboard.push(myInfo) // if user not exist in leaderboard then push it
+
+                    socket.emit('join-room-message', myInfo);
                     io.sockets.to(roomId).emit('room-info', roomInfo);
                     console.log(roomArr)
                 })  
             }else {
                 let index = roomArr[roomIndex].leaderboard.findIndex(x => x.userName == studId);
-
                 index === -1 && roomArr[roomIndex].leaderboard.push(myInfo)
-                socket.emit('join-room-message', roomArr[roomIndex]);
+                socket.emit('join-room-message', myInfo);
                 io.sockets.to(roomId).emit('room-info', roomArr[roomIndex]);
-                console.log(roomArr,"else" , roomArr[roomIndex].leaderboard)
             }
-           
         });
 
-        socket.on('create-room', () => {
+        socket.on('create-room', () => { //ignore this
             const roomId = uuid(`${Date.now()}`, uuid.DNS);
             socket.join(roomId);
             socket.emit('join-room-message', `You've join ${roomId} room`);
@@ -61,6 +61,8 @@ export function liveQuiz(io) {
 
         socket.on('quiz-start', ({roomId:roomId, quizId:quizId}) => {
             let quiz:quiz
+            let roomIndex = roomArr.findIndex(x => x.room_id == roomId);
+            roomArr[roomIndex].status = true;
             dbconnect("quiz", quizId,(data) => {
                 quiz = data;
                 console.log(`here is socket quiz: ${JSON.stringify(quiz)}`)
@@ -70,64 +72,32 @@ export function liveQuiz(io) {
             })
         })
 
+        // when timer end, emit end-timer to client
         socket.on('end-timer',({roomId:roomId}) => {
             io.sockets.to(roomId).emit('timerStatus', {status: false , time: 0});
             console.log('end_timer')
         })
 
-        socket.on('next-question', ({roomId:roomId, questionNum:questionNum, quizId: quizId}) => {
-            let quiz:quiz
-            dbconnect("quiz","84532",(data) => {
-                quiz = data;
-                io.sockets.to(roomId).emit('next-question', questionNum);
-                io.sockets.to(roomId).emit('timerStatus', {status: true , time: quiz.time});
-            })
+        socket.on('next-question', ({roomId:roomId, questionNum:questionNum, time: time}) => {
+            let roomIndex = roomArr.findIndex(x => x.room_id == roomId);
+            roomArr[roomIndex].question_num = questionNum;
+            io.sockets.to(roomId).emit('next-question', questionNum);
+            io.sockets.to(roomId).emit('timerStatus', {status: true , time: time});
         })
 
-        socket.on('ans_submit', ({questionNum: questionNum, quizId: quizId, ans: selectedAnsIndex, roomId: roomId}) => {
-            let quiz:quiz
-            dbconnect("quiz","84532", (data) => {
-                if(quiz.question_set[questionNum].correct == selectedAnsIndex){
-                    socket.emit('point', quiz.question_set[questionNum].point);
-                }
-            })
-        })
-
-        socket.on('point-submit', ({roomId: roomId, totalPoint: totalPoint}) => {
-            let data = {
-                playerId: socket.id,
-                userName: socket.id,
-                totalPoint: totalPoint,
-                mouseleaveTime:0,
-                mouseleaveCount:0,
-                answered_question:[
-                    {
-                        type:"mc",
-                        correct: true,
-                        ans: ["1"] //mc index
-                    },
-                    {
-                        type:"fill",
-                        correct: true,
-                        ans: ["test","test1"]
-                    },
-                    {
-                        type:"t&f",
-                        correct: true,
-                        ans: ["test","test1"]
-                    },
-                ]
-            };
+        // when count down end client submit the total point then we rank it and update the leaderboard
+        socket.on('point-submit', ({roomId: roomId, totalPoint: totalPoint, myInfo: myInfo}) => { 
             let roomIndex = roomArr.findIndex((e) => e.room_id === roomId)
-            let rankIndex = roomArr[roomIndex].leaderboard?.findIndex((e) => e.playerId === socket.id)
+            let rankIndex = roomArr[roomIndex].leaderboard?.findIndex((e) => e.userName === myInfo.userName)
             if ( rankIndex != -1){
-                roomArr[roomIndex].leaderboard[rankIndex] = data
+                roomArr[roomIndex].leaderboard[rankIndex] = myInfo
             }else{
-                roomArr[roomIndex].leaderboard.push(data)
+                roomArr[roomIndex].leaderboard.push(myInfo)
             }
             rank[roomId] = roomArr[roomIndex].leaderboard
             rank[roomId].sort((a,b)=> b.totalPoint - a.totalPoint)
-            io.sockets.to(roomId).emit('show-rank', {status: true , info: rank[roomId].slice(0,5)});
+            roomArr[roomIndex].leaderboard = rank[roomId]
+            io.sockets.to(roomId).emit('show-rank', {status: true , info: rank[roomId].slice(0,5), roomInfo: roomArr[roomIndex]});
             console.log("rank: "+JSON.stringify(rank).toString())
         })
     })
@@ -177,28 +147,34 @@ export function liveQuiz(io) {
             const db = client.db(dbName);
 
             //find quiz with passing the search criteria
-            console.log(`finding quiz...`);
-            let DOCID = {};
+            console.log(queryTpye)
 
             switch(queryTpye){
                 case "quiz" :
-                    DOCID['quiz_id']=queryValue;
-                    dbSearchQuiz(db, DOCID, (getQuizData) => {  // docs contain 1 document (hopefully)
+                    let quizQuery = {};
+                    console.log(`finding quiz...`);
+                    quizQuery['quiz_id'] = queryValue;
+                    dbSearchQuiz(db, quizQuery, (getQuizData) => {  // docs contain 1 document (hopefully)
+                        client.close();
                         console.log("Close DB connection");
                         fetchQuizData = getQuizData;
                         callback(fetchQuizData) as quiz
                     });
+                    break;
                 
                 case "room":
-                    DOCID['room_id']=queryValue;
-                    dbSearchRoom(db, DOCID, (getRooomData) => {  // docs contain 1 document (hopefully)
+                    let roomQuery = {};
+                    console.log(`finding room...`);
+                    roomQuery['room_id']=queryValue;
+                    dbSearchRoom(db, roomQuery, (getRooomData) => {  // docs contain 1 document (hopefully)
+                        client.close();
                         console.log("Close DB connection");
                         fetchRoomData = getRooomData;
                         callback(fetchRoomData) as room
                     });
-        
+                    break;
             }
-            client.close();
+            
         })
     }
 }

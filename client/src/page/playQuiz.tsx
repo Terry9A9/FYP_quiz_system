@@ -25,10 +25,10 @@ import { Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
-import {quiz, profile, userProfile, leaderboard, answered_question} from "../state";
-import _ from 'lodash'
-import MuiAlert, { AlertProps } from '@mui/material/Alert';
+import {quiz, profile, userProfile, answered_question, room} from "../state";
+import _ from 'lodash';
 import { getUserData } from '../../../server/controllers/loginFunction';
+import e from 'cors';
 
 const useStyles = makeStyles()((theme) => {
     return {
@@ -83,31 +83,29 @@ function PlayQuiz() {
 
     const [ws, setWs] = useState(webSocket('ws://localhost:3004'))
 
-    const [myInfo, setMyInfo] = useState({})
+    const [isStart, setIsStart] = useState(false as boolean) //quiz started
 
-    const [course, setCourse] = useState("" as string)
-    const [quiz, setQuiz] = useState("" as string)
+    const [quiz, setQuiz] = useState({} as quiz)
     const [questionSet, setQuestionSet] = useState([] as quiz["question_set"])
-    const [quizId, setQuizId] = useState("" as string)
-    const [questionNum, setQuestionNum] = useState(-1 as number)
-    const [selectedAnsIndex, setSelectedAnsIndex] = useState(-1 as number)
+
+    const [questionNum, setQuestionNum] = useState(-1 as number) // current question number
+    const [selectedAnsIndex, setSelectedAns] = useState("" as string) // selected answer
     const [totalPoint, setTotalPoint] = useState(0 as number)
-    const [showRank, setShowRank] = useState(false as boolean)
-    const [rankInfo, setRankInfo] = useState([] as leaderboard[])
-    const [waitMsg, setWaitMsg] = useState(false as boolean)
-    const [nickName, setNickName] = useState("" as string)
-    const [isStart, setIsStart] = useState(false as boolean)
-    const [nickNameDialog, setNickNameDialog] = useState(true as boolean)
+    const [showRank, setShowRank] = useState(false as boolean) //show rank page
+    const [waitMsg, setWaitMsg] = useState(false as boolean) //msg for wait for timer to end
+
     //sync timer
-    const [times, setTimes] = useState(-1 as number)
+    const [times, setTimes] = useState(-1 as number) //set seconds for timer
     const [timerStatus, setTimerStatus] = useState(false as boolean)
+
     //websocket room & Msg
-    const [joinedRoom, setJoinedRoom] = useState(false as boolean)
-    const [roomMsg, setRoomMsg] = useState("" as string)
-    const [roomInfo, setRoomInfo] = useState({})
-    const [showRoomMsg, setShowRoomMsg] = useState(false as boolean)
-    const [isHost, setIsHost] = useState(true as boolean)
-    //anit cheating
+    const [roomInfo, setRoomInfo] = useState({} as room) // current room info
+    const [rankInfo, setRankInfo] = useState([] as profile[]) 
+    const [isHost, setIsHost] = useState(true as boolean) // indicate if user is host
+    const [myInfo, setMyInfo] = useState({} as profile) // user profile
+    const [joinedRoom, setJoinedRoom] = useState(false as boolean) // indicate if user joined room
+
+    //anti cheating
     const [mouseMsg, setMouseMsg] = useState("" as string)
     const [OutCount,setOutCount] = useState(0 as number)
     const [Time0,setTime0] = useState(0 as number)
@@ -121,13 +119,11 @@ function PlayQuiz() {
     useEffect(() => {
         if(_.isEmpty(user)) {
             getUserData().then((user) => {
-            setUser(user);
-          });
+                setUser(user);
+            });
           }
     }, [])
 
-
-    const isPresent = useIsPresent();
 
     useEffect(()=>{
         if(enter){
@@ -143,9 +139,6 @@ function PlayQuiz() {
 
     const {classes} = useStyles();
     let {roomId} = useParams(); //get URL params
-
-    const connectWebSocket = () => {
-    }
 
     //initWebSocket
     useEffect(() => {
@@ -172,9 +165,6 @@ function PlayQuiz() {
         }
     }, [timerStatus, times])
 
-    function RoomBroadcastToast() { //react component
-    }
-
     function WaitCountDown() { //react component
         return (
             <>
@@ -192,7 +182,6 @@ function PlayQuiz() {
             </>
         )
     }
-
 
 
     function WaitingRoomComponent() {
@@ -257,7 +246,7 @@ function PlayQuiz() {
                     <Col>
                         {questionSet[questionNum]?.answers.map((question, index) =>
                             <>
-                                <Button onClick={() => {setSelectedAnsIndex(index);setWaitMsg(true)}}
+                                <Button onClick={() => {setSelectedAns(question);setWaitMsg(true)}}
                                        variant="contained" color="primary">
                                        {question}{index}
                                 </Button>
@@ -289,12 +278,35 @@ function PlayQuiz() {
         }]
     }
 
-    function Rank(){
+    function Rank(){  //Rank component 
+        console.log(rankInfo.map((e)=>e.answered_question[questionNum]))
+        let answered = rankInfo.map((e)=>e.answered_question[questionNum]?.ans).flatMap(str => str)
+        answered = answered.filter(str => str != "" || str != undefined)
+
+        let datae = questionSet[questionNum].answers.map((e,index)=>answered.filter(str => str == e))
+        let data = datae.map((e)=>Number((e.length/answered.length).toFixed(2))*100)
+        //data = [50,50]
+        console.log(datae+"data")
+        let questionStat = {    
+            labels: questionSet[questionNum].answers,
+            datasets: [{
+                label: `Question ${questionNum}`,
+                data: data,
+                backgroundColor: [
+                    'rgb(255, 99, 132)',
+                    'rgb(54, 200, 235)',
+                    'rgb(63, 53, 23)',
+                    'rgb(65, 97, 235)',
+                ],
+                hoverOffset: 4
+            }]
+        }
+        setTimeout(() => {console.log("point-submit")}, 1000)
         return (
             <>
                 <Row className={classes.bg} style={{height: "80vh", borderRadius:"2vh"}}>
                 <Col style={{display: 'flex', alignItems:"center", justifyContent:"center"}}>
-                   <div> <Doughnut data={data} /></div>
+                   <div> <Doughnut data={questionStat} redraw={true} /></div>
                 </Col>
                 <Col>
                     <Grid container alignItems="center" justifyContent="center" spacing={1} style={{height: "100%"}}>
@@ -372,11 +384,13 @@ function PlayQuiz() {
     const initWebSocket = () => {
         ws.on('connect', () => {
             if (roomId) {
-                const stdId = JSON.parse(localStorage.getItem("loginData")).account.name;
-                ws.emit('join-room', roomId,stdId);
-                console.log('join-room',stdId)
-                setJoinedRoom(true)
-
+                const loginData = JSON.parse(localStorage.getItem("loginData") || '{}'); //get login data from local storage if exist (loginData is null if not login)
+                if(loginData){
+                    const stdId = loginData?.account?.name || "Guest";
+                    ws.emit('join-room', roomId,stdId);
+                    console.log('join-room',stdId)
+                    setJoinedRoom(true)
+                }
             } else {
                 ws.emit('create-room');
                 console.log('create-room')
@@ -384,15 +398,13 @@ function PlayQuiz() {
         });
         ws.on('join-room-message', (msg) => {
             setMyInfo(msg);
-            console.log(msg);
+            console.log("MyInfo"+JSON.stringify(msg));
         });
         ws.on('room-info',(msg) => {
             setRoomInfo(msg)
-            console.log(JSON.stringify(msg.players))
+            console.log(JSON.stringify(msg.leaderboard))
         });
         ws.on('room-brocast', (msg) => {
-            setRoomMsg(msg)
-            setShowRoomMsg(true)
             console.log(msg);
         });
         ws.on('quiz-start', (msg) => {
@@ -414,33 +426,46 @@ function PlayQuiz() {
             setTotalPoint((p) => p+msg)
         })
         ws.on('show-rank', (msg) => {
-            setShowRank(msg.status)
             setRankInfo(msg.info)
+            setRoomInfo(msg.roomInfo)
+            setShowRank(msg.status)
         })
     }
 
     const startQuiz = () => {
-        ws.emit('quiz-start', {roomId: roomId, quizId: quizId});
+        ws.emit('quiz-start', {roomId: roomId, quizId: roomInfo.quiz_id});
     }
 
     const nextQuestion = () => {
-        ws.emit('next-question', {roomId: roomId, questionNum: questionNum + 1, quizId: quizId});
+        ws.emit('next-question', {roomId: roomId, questionNum: questionNum + 1, time: quiz.time});
     }
 
     function submit_ans () {
         if (!timerStatus) {
-            let point = totalPoint
+            let tempMyInfo = myInfo
+            console.log(myInfo.userName+"tempMyInfo")
+            let point = tempMyInfo.totalPoint
             console.log(selectedAnsIndex+"sel")
-            if (selectedAnsIndex == questionSet[questionNum]?.correct) {
+            let correct: boolean = selectedAnsIndex == questionSet[questionNum]?.correct
+            if (correct) {
                 point = totalPoint + questionSet[questionNum]?.point
                 console.log("correct"+point)
-                setTotalPoint(point)
             }
-            console.log(point)
-            ws.emit('point-submit', {roomId: roomId, totalPoint: point})
+            let answered = {
+                type:"mc",
+                correct: correct,
+                ans: [String(selectedAnsIndex)]//mc index
+            }
+            tempMyInfo['answered_question'].push(answered)
+            tempMyInfo.totalPoint = point
+            setTotalPoint(point)
+            setMyInfo(tempMyInfo)
+            ws.emit('point-submit', {roomId: roomId, totalPoint: myInfo.totalPoint, myInfo: myInfo});
+            console.log(myInfo)
+            setSelectedAns("")
         } else {
             setWaitMsg(true);
-        }
+        } 
     }
 
     const handleMouseLeave = () => {
