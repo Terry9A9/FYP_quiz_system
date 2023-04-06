@@ -28,7 +28,6 @@ import { handleLogin, handleLogout, getUserData } from '../../../server/controll
 import {userProfile} from "../state";
 import _ from 'lodash'
 
-
 const useStyles = makeStyles()((theme) => {
     return {
         root: {
@@ -69,9 +68,14 @@ const EnterRoomId = () => {
     const navigate = useNavigate();
     const [roomId, setRoomId] = useState('');
     const [user, setUser] = useState({} as userProfile);
+    const [showQuiz, setShowQuiz] = useState(false);
     const handleSubmit = e => {
         e.preventDefault();
         navigate(`/play/quiz/${roomId}`);
+    };
+
+    const handleSubmitGpt = (lectureNoteNum) => {
+        navigate(`/gptQuiz/${lectureNoteNum}`);
     };
 
     const [MenuOpen,setMenuOpen]=useState(false);
@@ -194,7 +198,7 @@ const EnterRoomId = () => {
                             <ListSubheader>{`I'm sticky ${sectionId}`}</ListSubheader>
                             {[0, 1, 2].map((item) => (
                             <ListItem key={`item-${sectionId}-${item}`}>
-                                <ListItemText primary={`Item ${item}`} />
+                                <Button onClick={()=>handleSubmitGpt("asd")}>GPT</Button>
                             </ListItem>
                             ))}
                         </ul>
@@ -219,7 +223,7 @@ const EnterRoomId = () => {
                                 sx={{ padding: 8, height: '100%', width: '100%'}}
                                 startIcon={<MeetingRoomIcon />}
                                 >
-                                Create Roomg
+                                Create Room
                                 </Button>
                             </Grid>
                             <Grid item xs={12} sm={6}>
@@ -249,7 +253,7 @@ const EnterRoomId = () => {
                     <Grid container
                     sx={{
                         borderRadius:'15px ',
-                        border:'1px outset #C1FFE4 ',
+                        border:'1px outset LightSlateGray ',
                         boxShadow:'0px 0px 10px rgba(183, 183, 183, 0.5)',
                         width: '15vw',
                         height:'70vh',
@@ -257,7 +261,7 @@ const EnterRoomId = () => {
                         }}>
                         <Grid item xs={12} style={{borderTopLeftRadius:'15px ',borderTopRightRadius:'15px ',boxShadow:'0px 4px 4px rgba(130, 130, 130, 0.25)',backgroundColor: 'rgba(52, 154, 227, 0.8)', height: '15%'}}>
                             <Box>
-                            {/* cont */}
+                            {"active"}
                             </Box>
                         </Grid>
                         <Grid item xs={12} style={{height:'85%',backgroundColor:'rgba(252,252,252,0.85)',borderBottomLeftRadius:'15px ',borderBottomRightRadius:'15px '}}>

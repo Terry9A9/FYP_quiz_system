@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { TextField, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { makeStyles } from 'tss-react/mui';
-import {Room} from "../state";
+import {room} from "../state";
 import _ from 'lodash'
 
 const useStyles = makeStyles()((theme) => {

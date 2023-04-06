@@ -7,6 +7,8 @@ import {liveQuiz} from './controllers/liveQuiz';
 import {v5 as uuid} from 'uuid';
 import {quiz,room} from "../client/src/state"
 import { getUserData, handleLogin } from './controllers/loginFunction';
+
+import { GptQuizAPI } from './controllers/GetGptQuiz';
 const app = express()
 const port: number = 3004;
 
@@ -29,12 +31,8 @@ type stuProfile = {
     totalPoint: number
 }
 
-app.get('/api/play/quiz/:quizId', async ctx => {})
-
-app.get('/api/play/quiz/:quizId', async ctx => {})
-
-app.get('/api/play/quiz/:quizId', (req,res) => {
-    let quiz_id = req.params
+app.get('/api/gptQuiz/:lectureNoteNum', (req, res) => {
+    GptQuizAPI(req.params.lectureNoteNum).then((result) => {res.send(result)})
 });
 
 app.get('/api/quiz/:roomId', (req,res) => {
