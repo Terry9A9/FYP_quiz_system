@@ -8,6 +8,7 @@ import 'bootstrap/dist/css/bootstrap.css';
 import LoginLogoutButton from './page/login';
 
 import CreateRoomForm from './page/CRoom';
+import GptQuiz from './page/quizGptPage';
 const router = createBrowserRouter([
   {
     path: "/play/quiz/:roomId",
@@ -24,10 +25,10 @@ const router = createBrowserRouter([
     path: "/CRoom",
     element: <CreateRoomForm/>,
   },
-  // {
-  //   path: "/drawing",
-  //   element: <DrawingCanvas width={400} height={400}/>,
-  // },
+  {
+    path: "/gptQuiz/:lectureNoteNum",
+    element: <GptQuiz/>,
+  },
 ]);
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
