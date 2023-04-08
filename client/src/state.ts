@@ -1,3 +1,4 @@
+import exp from "constants"
 
 export type quiz = {
     title: string
@@ -8,6 +9,7 @@ export type quiz = {
     end_date: string,
     time: number,
     random: boolean,
+    creator_id: string,
     question_set: question[]
 }
 
@@ -27,7 +29,11 @@ export type question = {
 }
 
 export type userProfile = {
-    displayName: string
+    displayName: string,
+    email: string,
+    role: string,
+    oid: string,
+    courses: string[],
 }
 
 export type room = {
@@ -57,4 +63,29 @@ export type answered_question = {
     type:string,
     correct:boolean,
     ans:string[],
+}
+
+export type mcQuiz = {
+    title: string,
+    quiz_id: string,
+    question_set: mcQuestion[],
+    enable_anti_cheat: boolean,
+}
+
+export type mcQuestion = {
+    question: string,
+    options: string[],       
+    answer: string,
+    explanation?: string,
+}
+
+export type course = {
+    course_id: string,
+    course_name: string,
+    notes: note[],
+}
+
+export type note = {
+    title: string,
+    content: BinaryType,
 }

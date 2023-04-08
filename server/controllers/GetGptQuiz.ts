@@ -2,9 +2,16 @@ const fs = require('fs');
 const pdf = require('pdf-parse');
 const { Configuration, OpenAIApi } = require("openai");
 
-let dataBuffer = fs.readFileSync('./server/controllers/test.pdf');
+const MongoClient = require('mongodb').MongoClient;
+const mongourl = 'mongodb+srv://FYP:123@cluster0.oxp1vse.mongodb.net/?retryWrites=true&w=majority';
+const dbName = 'FYP_DATA';
 
-export async function GptQuizAPI (lectureNoteNum) {
+//const client = new MongoClient(mongourl, {useNewUrlParser: true, useUnifiedTopology: true});
+
+
+
+export async function GptQuizAPI (note_id) {
+    
     async function chatGPT(pdf){
         const configuration = new Configuration({
             apiKey: "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",
@@ -39,11 +46,44 @@ export async function GptQuizAPI (lectureNoteNum) {
         // })
     }
 
-    return pdf(dataBuffer).then(function(data) {
-        return chatGPT(data.text).then(r => {return r})
-    });
+    const projection = {
+        'notes.$': 1
+      };
 
+    const client = await MongoClient.connect(
+        'mongodb+srv://FYP:123@cluster0.oxp1vse.mongodb.net/?retryWrites=true&w=majority',
+        { useNewUrlParser: true, useUnifiedTopology: true }
+      );
+
+    const coll = client.db('FYP_DATA').collection('courses');
+    const cursor = coll.find({"notes.note_id":note_id},{projection});
+    const result = await cursor.toArray();
+    await client.close();
+    //console.log(result[0].notes[0].content.buffer)
+    return await pdf(result[0].notes[0].content.buffer).then(function(data) {
+        return chatGPT(data.text).then(r => { return r})
+    })
 }
+
+// GptQuizAPI("Lect01_1").then(r => {console.log(r)})
+
+// let dataBuffer = fs.readFileSync('./server/controllers/321F Lect01-ch13_EERD_v1.pdf');
+
+// console.log(dataBuffer)
+
+// const client = new MongoClient(mongourl, {useNewUrlParser: true, useUnifiedTopology: true});
+
+// const uploadNote : course ={
+//     course_id: "COMPS321F",
+//     course_name: "Advanced Database And Data Warehousing",
+//     notes: [
+//         {
+//             title: "321F Lect01-ch13_EERD_v1",
+//             content: dataBuffer
+//         }
+        
+//     ]
+// }
 
 // GptQuizAPI("asd").then(r => {console.log(r)})
 

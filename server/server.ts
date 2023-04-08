@@ -31,8 +31,8 @@ type stuProfile = {
     totalPoint: number
 }
 
-app.get('/api/gptQuiz/:lectureNoteNum', (req, res) => {
-    GptQuizAPI(req.params.lectureNoteNum).then((result) => {res.send(result)})
+app.get('/api/gptQuiz/:lectureNoteID', (req, res) => {
+    GptQuizAPI(req.params.lectureNoteID).then((result) => {res.send(result)})
 });
 
 app.get('/api/quiz/:roomId', (req,res) => {

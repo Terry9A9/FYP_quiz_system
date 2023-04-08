@@ -21,13 +21,15 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import DoneIcon from '@mui/icons-material/Done';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ReplayIcon from '@mui/icons-material/Replay';
+import HomeIcon from '@mui/icons-material/Home';
 
 import axios from "axios";
 
 import React, { useEffect, useRef, useState } from "react";
+import { mcQuiz } from "../state";
+import { useNavigate, useParams } from "react-router-dom";
 
-const questionsa = [
+const questionsTest = [
     {
         "question": "What is the main purpose of normalization?",
         "options": [
@@ -75,30 +77,32 @@ const questionsa = [
 ];
 
 function GptQuiz() {
-    const [currentQuestion, setCurrentQuestion] = useState(0);
-    const [selectedOption, setSelectedOption] = useState('');
-    const [score, setScore] = useState(0);
-    const [showScore, setShowScore] = useState(false);
+    const [currentQuestion, setCurrentQuestion] = useState(0 as number);
+    const [selectedOption, setSelectedOption] = useState('' as string);
+    const [score, setScore] = useState(0 as number);
+    const [showScore, setShowScore] = useState(false as boolean);
     const [saveChoice, setSaveChoice] = useState([] as string[]);
     const [expanded, setExpanded] = React.useState<string | false>(false);
-    const [loading, setLoading] = useState(false);
-    const [questions, setQuestions] = useState([] as any);
-    const dataFetchedRef = useRef(false);
+    const [loading, setLoading] = useState(false as boolean);
+    const [questions, setQuestions] = useState(questionsTest as mcQuiz["question_set"]);
+    const dataFetchedRef = useRef(false as boolean);
 
-
-    useEffect(() => {
-        if (dataFetchedRef.current) return;
-        dataFetchedRef.current = true;
-        if (questions.length === 0) {
-            setLoading(true);
-            let lectureQuiz = axios.get('http://localhost:3004/api/gptQuiz/1')
-            lectureQuiz.then((res) => {
-                console.log(res.data);
-                setLoading(false);
-                setQuestions(res.data)
-            })
-        }
-    }, []);
+    const navigate = useNavigate();
+    let {lectureNoteID} = useParams();
+    
+    // useEffect(() => {
+    //     if (dataFetchedRef.current) return;
+    //     dataFetchedRef.current = true;
+    //     if (questions.length === 0) {
+    //         setLoading(true);
+    //         let lectureQuiz = axios.get('http://localhost:3004/api/gptQuiz/Lect01_1')
+    //         lectureQuiz.then((res) => {
+    //             console.log(res.data);
+    //             setLoading(false);
+    //             setQuestions(res.data)
+    //         })
+    //     }
+    // }, []);
     // let lectureQuiz = axios.get('http://localhost:3004/api/gptQuiz/1')
     // lectureQuiz.then((res) => {console.log(res.data)})
     const handleOptionChange = (event) => {
@@ -107,12 +111,13 @@ function GptQuiz() {
 
     const handleOptionGet = (event) => {
         setLoading(true);
-        // let lectureQuiz = axios.get('http://localhost:3004/api/gptQuiz/1')
-        // lectureQuiz.then((res) => { 
-        //     console.log(res.data);
-        //     setLoading(false);
-        //     setQuestions(res.data)
-        // })
+        setQuestions([])
+        let lectureQuiz = axios.get(`http://localhost:3004/api/gptQuiz/${lectureNoteID}`)
+        lectureQuiz.then((res) => { 
+            console.log(res.data);
+            setLoading(false);
+            setQuestions(res.data)
+        })
     };
 
     const handleNextQuestion = () => {
@@ -131,11 +136,12 @@ function GptQuiz() {
     };
 
     const handleRestartQuiz = () => {
-        setCurrentQuestion(0);
-        setSelectedOption('');
-        setScore(0);
-        setShowScore(false);
-        setSaveChoice([]);
+        navigate(`/`);
+        // setCurrentQuestion(0);
+        // setSelectedOption('');
+        // setScore(0);
+        // setShowScore(false);
+        // setSaveChoice([]);
     };
 
     const handleChange =
@@ -194,7 +200,7 @@ function GptQuiz() {
                         bottom: 16,
                         float: "right",
                     }}>
-                        <ReplayIcon />
+                        <HomeIcon />
                     </Fab>
                 </div>
             ) : (
@@ -223,7 +229,7 @@ function GptQuiz() {
                     }
                 </div>
             )}
-            {/* <Button onClick={handleOptionGet}>test</Button> */}
+            <Button onClick={handleOptionGet}>test</Button>
             <Backdrop
                 sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
                 open={loading}
