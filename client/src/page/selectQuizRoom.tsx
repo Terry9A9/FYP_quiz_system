@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TextField, Button, Box , Grid} from '@mui/material';
+import { TextField, Button, Box , Grid, colors} from '@mui/material';
 import { useNavigate  } from 'react-router-dom';
 import { makeStyles } from 'tss-react/mui';
 
@@ -27,6 +27,7 @@ import Typography from "@mui/material/Typography";
 import { handleLogin, handleLogout, getUserData } from '../../../server/controllers/loginFunction';
 import {userProfile} from "../state";
 import _ from 'lodash'
+import { color } from 'framer-motion';
 
 const useStyles = makeStyles()((theme) => {
     return {
@@ -49,7 +50,6 @@ const useStyles = makeStyles()((theme) => {
             width: '55px',
             height:'55px',
             borderRadius:'50%',
-            marginTop:'0.5%',
             position:'absolute',
             right:'1.5%'
         },
@@ -132,7 +132,15 @@ const EnterRoomId = () => {
                         >
                         </Button>
                         </Tooltip>
+                        {user && <Typography variant="h6" component="div" sx={{ flexGrow: 1, color:"black"}}>Welcome, {user.displayName}</Typography>}
+                        {user ? (
+                            <Button sx={{ color: '#000000' , position:"absolute", right:"6%"}} onClick={logout}>Logout</Button>
                             
+                        ) : (
+                            <Button sx={{ color: '#000000' , position:"absolute", right:"7%"}} onClick={login}>Login with Microsoft</Button>
+                        )
+                        }
+                        
                         <Tooltip title="Open settings">
                             <IconButton className={classes.profileBox}>
                                 <Avatar
@@ -163,7 +171,7 @@ const EnterRoomId = () => {
 
             <div className={classes.root}>
                 <Row>
-                    <Col>
+                    {/* <Col>
                         {user ? (
                             <>
                                 <p>Welcome, {user.displayName}.</p>
@@ -173,7 +181,7 @@ const EnterRoomId = () => {
                             <Button variant='contained' color='primary' onClick={login}>Login with Microsoft Here</Button>
                         )
                         }
-                    </Col>
+                    </Col> */}
                     <Col>
                     <List
                     sx={{
@@ -198,7 +206,7 @@ const EnterRoomId = () => {
                             <ListSubheader>{`I'm sticky ${sectionId}`}</ListSubheader>
                             {[0, 1, 2].map((item) => (
                             <ListItem key={`item-${sectionId}-${item}`}>
-                                <Button onClick={()=>handleSubmitGpt("asd")}>GPT</Button>
+                                <Button onClick={()=>handleSubmitGpt("Lect01_1")}>GPT</Button>
                             </ListItem>
                             ))}
                         </ul>

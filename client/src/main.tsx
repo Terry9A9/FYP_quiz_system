@@ -26,7 +26,7 @@ const router = createBrowserRouter([
     element: <CreateRoomForm/>,
   },
   {
-    path: "/gptQuiz/:lectureNoteNum",
+    path: "/gptQuiz/:lectureNoteID",
     element: <GptQuiz/>,
   },
 ]);
