@@ -119,7 +119,18 @@ app.post('/api/get-role', async(req,res) => {
     });
 
 });
+app.post('/api/getRooms', async(req,res) => {
+    const client = new MongoClient(mongourl, {useNewUrlParser: true, useUnifiedTopology: true});
+    await client.connect((err) => {
+        const db = client.db(dbName);
+        let cursor = db.collection('Rooms').find({status: true});
+        cursor.toArray((err,getRoomData) => {
+            res.send({data:getRoomData});
+        });
+        client.close();
+    });
 
+});
 app.post('/api/rooms', async (req, res) => {
     const { room_name, quiz_id, ispublic, password, allow_emoji_popup, create_time } = req.body;
   

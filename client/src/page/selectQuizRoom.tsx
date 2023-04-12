@@ -28,6 +28,8 @@ import { handleLogin, handleLogout, getUserData } from '../../../server/controll
 import { userProfile } from "../state";
 import _ from 'lodash'
 import { color } from 'framer-motion';
+import { json } from 'stream/consumers';
+
 
 const useStyles = makeStyles()((theme) => {
     return {
@@ -61,8 +63,6 @@ const useStyles = makeStyles()((theme) => {
     }
 });
 
-
-
 const EnterRoomId = () => {
     const { classes } = useStyles();
     const navigate = useNavigate();
@@ -78,6 +78,10 @@ const EnterRoomId = () => {
         navigate(`/gptQuiz/${lectureNoteNum}`);
     };
 
+    const goRoom = (room_id) => {
+        navigate(`/play/quiz/${room_id}`);
+    };
+
     const [MenuOpen, setMenuOpen] = useState(false);
     const [anchor, setAnchor] = useState('left');
 
@@ -88,17 +92,34 @@ const EnterRoomId = () => {
         setMenuOpen(false);
     }
 
+    const [Roomlist, setRoomlist] = useState([]);
 
 
     // Call the getUserData function when the component loads
     useEffect(() => {
+        
         if (_.isEmpty(user)) {
             getUserData().then(data => {
                 setUser(data);
             });
         }
-    }, []);
+       
+        const list= async ()=>{ 
+            
+            const roleRes = await fetch('http://localhost:3004/api/getRooms', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        const jsonData = await roleRes.json();
+        setRoomlist(jsonData.data);
+    };
 
+    list();
+
+    }, []);
+    console.log(Roomlist);
     async function login() {
         // Set the user profile state
         const user = handleLogin();
@@ -109,7 +130,6 @@ const EnterRoomId = () => {
         handleLogout();
         setUser({} as userProfile);
     }
-
 
     return (
         <>
@@ -280,7 +300,12 @@ const EnterRoomId = () => {
                                 </Grid>
                                 <Grid item xs={12} style={{ height: '85%', backgroundColor: 'rgba(252,252,252,0.85)', borderBottomLeftRadius: '15px ', borderBottomRightRadius: '15px ' }}>
                                     <Box >
-
+                                    <h1>Active Rooms</h1>
+                                    <ul>
+                {Roomlist.length>0 && Roomlist?.map(room => (
+                    <li><Button onClick={() => goRoom(room.room_id)}>{room.room_name}</Button></li>
+                ))}
+            </ul>
                                     </Box>
                                 </Grid>
                             </Grid>
