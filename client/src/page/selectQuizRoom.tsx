@@ -301,7 +301,7 @@ const EnterRoomId = () => {
                                 <Grid item xs={12} style={{ height: '85%', backgroundColor: 'rgba(252,252,252,0.85)', borderBottomLeftRadius: '15px ', borderBottomRightRadius: '15px ' }}>
                                     <Box >
                                     <ul>
-                {Roomlist.length>0 && Roomlist?.map(room => (
+                {user&&Roomlist.length>0 && Roomlist?.map(room => (
                     <li><Button onClick={() => goRoom(room.room_id)}>{room.room_name}</Button></li>
                 ))}
             </ul>
