@@ -295,12 +295,11 @@ const EnterRoomId = () => {
                                 }}>
                                 <Grid item xs={12} style={{ borderTopLeftRadius: '15px ', borderTopRightRadius: '15px ', boxShadow: '0px 4px 4px rgba(130, 130, 130, 0.25)', backgroundColor: 'rgba(52, 154, 227, 0.8)', height: '15%' }}>
                                     <Box>
-                                        {"active"}
+                                    <h3>Active Rooms</h3>
                                     </Box>
                                 </Grid>
                                 <Grid item xs={12} style={{ height: '85%', backgroundColor: 'rgba(252,252,252,0.85)', borderBottomLeftRadius: '15px ', borderBottomRightRadius: '15px ' }}>
                                     <Box >
-                                    <h1>Active Rooms</h1>
                                     <ul>
                 {Roomlist.length>0 && Roomlist?.map(room => (
                     <li><Button onClick={() => goRoom(room.room_id)}>{room.room_name}</Button></li>
