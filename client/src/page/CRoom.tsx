@@ -39,27 +39,39 @@ function CreateRoomForm() {
 	const handleSubmit = (event) => {
 		event.preventDefault();
 		// Send form data to backend
-		const roomId = (Math.floor(Math.random() * 99999999)+1).toString()
-		fetch('http://localhost:3004/api/rooms', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({
-				room_id: roomId,
-				room_name: roomName,
-				quiz_id: quiz_id,
-				quiz_type: quizType,
-				create_time: Math.floor(Date.now() / 1000).toString(),
-				create_by: userOid,
-			})
-		})
-		setLoading(true)
-		setTimeout(() => {
-			setLoading(false)
-			navigate(`/play/quiz/${roomId}`)
-		}, 2000)
 		
+			let roomId 
+			if(quizType == "Live"){
+				roomId = (Math.floor(Math.random() * 99999999)+1).toString()
+			}else {
+				roomId = "84532"
+			}
+			fetch('http://localhost:3004/api/rooms', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					room_id: roomId,
+					room_name: roomName,
+					quiz_id: quiz_id,
+					quiz_type: quizType,
+					create_time: Math.floor(Date.now() / 1000).toString(),
+					create_by: userOid,
+				})
+			})
+			setLoading(true)
+			if(quizType == "Live"){
+				setTimeout(() => {
+					setLoading(false)
+					navigate(`/play/quiz/${roomId}`)
+				}, 2000)
+			}else{
+				setTimeout(() => {
+					setLoading(false)
+					navigate(`/`, { replace: true })
+				}, 1000)
+			}
 	};
 
 	const handleRoomNameChange = (event) => {
@@ -206,9 +218,6 @@ function CreateRoomForm() {
                 sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
                 open={loading}
             >
-                 <Typography variant="h6" sx={{alignContent:"center"}}>
-                    {"Waiting OpenAI API to response..."}
-                </Typography>
                 <CircularProgress color="inherit" />
             </Backdrop>
 		</Box>

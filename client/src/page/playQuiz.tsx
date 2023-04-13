@@ -16,10 +16,10 @@ import {
     Box,
     TextField,
     Dialog,
-    useMediaQuery, DialogTitle, DialogContent, DialogActions, Badge, Typography, Card, CardMedia, CircularProgress,
+    useMediaQuery, DialogTitle, DialogContent, DialogActions, Badge, Typography, Card, CardMedia, CircularProgress, Fab, IconButton 
 } from '@mui/material';
 
-
+import HomeIcon from '@mui/icons-material/Home';
 import { Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 
@@ -41,6 +41,10 @@ const useStyles = makeStyles()((theme) => {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
+            userSelect: 'none',
+            WebkitUserSelect: 'none',
+            MozUserSelect: 'none',
+            msUserSelect: 'none',
         },
         textField: {
             margin: '20px 0'
@@ -100,7 +104,7 @@ function PlayQuiz() {
     //websocket room & Msg
     const [roomInfo, setRoomInfo] = useState({} as room) // current room info
     const [rankInfo, setRankInfo] = useState([] as profile[]) 
-    const [isHost, setIsHost] = useState(true as boolean) // indicate if user is host
+    const [isHost, setIsHost] = useState(false as boolean) // indicate if user is host
     const [myInfo, setMyInfo] = useState({} as profile) // user profile
     const [joinedRoom, setJoinedRoom] = useState(false as boolean) // indicate if user joined room
 
@@ -116,6 +120,7 @@ function PlayQuiz() {
     const [user, setUser] = useState({} as userProfile);
     
     const navigate = useNavigate();
+
 
     
     useEffect(() => {
@@ -143,6 +148,11 @@ function PlayQuiz() {
           }
     }, [])
 
+    useEffect(() => {
+        if(user?.id && roomInfo?.create_by && user?.id == roomInfo?.create_by){
+            setIsHost(true)
+        }
+    }, [user,roomInfo])
 
     useEffect(()=>{
         if(timerStatus){
@@ -169,6 +179,10 @@ function PlayQuiz() {
             console.log('initWebSocket!')
         }
     }, [ws])
+
+    const handleRestartQuiz = () => {
+        navigate(`/`, { replace: true });
+    };
 
  
     interface Props {
@@ -252,9 +266,7 @@ function PlayQuiz() {
                         </Typography>
                     </Col>
                     <Col style={{display: "flex", justifyContent: "center"}}>
-                        <Typography variant='h4'>
-                            Point: {totalPoint}
-                        </Typography>
+                        
                     </Col>
                 </Row>
                 <Row style={{justifyContent: "center"}}>
@@ -289,25 +301,6 @@ function PlayQuiz() {
         )
     }
 
-    let data = {
-        labels: [
-            'Red',
-            'Blue',
-            'Yellow'
-        ],
-        datasets: [{
-            label: 'My First Dataset',
-            data: [300, 50, 100],
-            backgroundColor: [
-                'rgb(255, 99, 132)',
-                'rgb(54, 162, 235)',
-                'rgb(255, 205, 86)'
-            ],
-            hoverOffset: 4
-        }]
-    }
-
-   
 
     function Rank(){  //Rank component 
         let color = [
@@ -316,7 +309,7 @@ function PlayQuiz() {
             'rgb(65, 97, 235)',
             'rgb(255 , 223, 186)'
         ]
-        console.log(rankInfo.map((e)=>e.answered_question[questionNum]))
+        // console.log(rankInfo.map((e)=>e.answered_question[questionNum]))
         let answered = rankInfo.map((e)=>e.answered_question[questionNum]?.ans).flatMap(str => str)
         answered = answered.filter(str => str != "" || str != undefined)
 
@@ -335,7 +328,7 @@ function PlayQuiz() {
                 hoverOffset: 4
             }]
         }
-        console.log(questionStat)
+        // console.log(questionStat)
         setTimeout(() => {console.log("point-submit")}, 1000)
         return (
             <>
@@ -414,7 +407,7 @@ function PlayQuiz() {
             <div className={classes.center} style={{float:"right"}}>
                 <div
                     className={classes.sButton}
-                    onClick={() => {handleFinish}}
+                    onClick={handleFinish}
                     style={{backgroundColor: "#94bbe9"}}
                 >
                     Finish
@@ -437,7 +430,15 @@ function PlayQuiz() {
                 )
             }
         }else if(isStart){
-            return <CountDown time={times}/>
+            return (
+                <>
+                <CountDown time={times}/>
+                <Typography variant='h3'>
+                    Point: {totalPoint}
+                </Typography>
+                </>
+            
+            )
         }
         return (
             <>
@@ -518,8 +519,6 @@ function PlayQuiz() {
 
     function submit_ans () {
         if (!timerStatus) {
-            console.log("OutCount"+OutCount)
-            console.log("OutTime"+Time)
             let tempMyInfo = myInfo
             console.log(myInfo.userName+"tempMyInfo")
             let point = tempMyInfo.totalPoint
@@ -557,11 +556,12 @@ function PlayQuiz() {
             infoModal.showModal()
             console.log("mouse Leave!!")
         }
-
     }
 
     const handleFinish = () => {
-        ws.emit('quiz-finish', {roomInfo: roomInfo});
+        if(isHost){
+            ws.emit('quiz-finish', {roomInfo: roomInfo});
+        }
         navigate("/")
     }
 
@@ -583,7 +583,7 @@ function PlayQuiz() {
                 <br/>
                 <Container>
                     <Row>
-                        <Col style={{height:"12vh", backgroundColor:"lightblue", marginBottom:"1vh", borderRadius: 30,}}>
+                        <Col style={{height:"12vh", backgroundColor:"lightblue", marginBottom:"1vh", borderRadius: 30}}>
                             <div style={{height:"12vh",display:'flex', flexWrap: "wrap",alignContent: "center",justifyContent: "space-around"}}>
                                 {joinedRoom && joinRoomMsg()}
                             </div>
@@ -595,17 +595,25 @@ function PlayQuiz() {
                     </Row>
                     <Row>
                         <Col>
-                            {!isStart && user?.id && user?.id == roomInfo.create_by && <StartButton/>}
-                            {user?.id == roomInfo.create_by && showRank && isStart && questionNum + 1 < questionSet?.length ?
+                            {!isStart && isHost && <StartButton/>}
+                            {isHost && showRank && isStart && questionNum + 1 < questionSet?.length ?
                                 <NextButton/> : ""}
                                 {
-                                    ! (questionNum + 1 < questionSet?.length)  && isStart && <FinishButton/>
+                                    ! (questionNum + 1 < questionSet?.length)  && isStart && showRank && <FinishButton/>
                                 }
                         </Col>
                     </Row>
                     <br/>
                     <dialog id="infoModal"style={{height: "100%",width:'100%'}} >
-                        <p>plz</p>
+                        <div style={{display:'flex', alignItems:"center", justifyContent:"center", marginTop:"40vh", flexDirection:"column"}}>
+                            <Typography variant='h3'>
+                                Please move your mouse back to the quiz! 
+                            </Typography>
+                            <br />
+                            <Typography variant='h5'>
+                                Question {questionNum + 1}: Total mouse left {Time}s and {OutCount} time
+                            </Typography>
+                        </div>
                     </dialog>
                 </Container>
             </div>

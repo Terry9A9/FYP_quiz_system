@@ -121,7 +121,7 @@ export const getUserData = async () => {
                 'Content-Type': 'application/json'
               },
               body: JSON.stringify({
-                idTokenClaims: JSON.stringify(tokenResult.idTokenClaims)
+                idTokenClaims: tokenResult.idTokenClaims,
               })
             })
             //get and set the role of login user return from server

@@ -31,16 +31,25 @@ type stuProfile = {
     totalPoint: number
 }
 
-app.get('/api/gptQuiz/:lectureNoteID', (req, res) => {
+app.get('/api/attendanceQuiz/:quizID', cors({ origin: false }), async (req, res) => {
+    const client = await MongoClient.connect(mongourl,{ useNewUrlParser: true, useUnifiedTopology: true });
+    const coll = client.db('FYP_DATA').collection('Quiz');
+    let cursor = coll.find({quiz_id:req.params.quizID}).project({_id:0});
+    const result = await cursor.toArray();
+    await client.close();
+    res.json(result[0])
+});
+
+app.get('/api/gptQuiz/:lectureNoteID', cors({ origin: false }), (req, res) => {
     GptQuizAPI(req.params.lectureNoteID).then((result) => {res.send(result)})
 });
 
-app.get('/api/quiz/:roomId', (req,res) => {
+app.get('/api/quiz/:roomId',cors({ origin: false }), (req,res) => {
     req.body = req.params;
     res.send("12");
 });
 
-app.post('/api/login', async(req,res) => {
+app.post('/api/login',cors({ origin: false }), async(req,res) => {
     const idTokenClaims = JSON.parse(req.body.idTokenClaims);
     const user = JSON.parse(req.body.user);
     //console.log(`Received data: ${idToken} ${idTokenClaims}, ${user}`);
@@ -51,19 +60,14 @@ app.post('/api/login', async(req,res) => {
         email: user.mail,
         loginTime: idTokenClaims.iat,
     }
-
+    const client = await MongoClient.connect(mongourl,{ useNewUrlParser: true, useUnifiedTopology: true });
     //push the data to DB
-    const client = new MongoClient(mongourl, {useNewUrlParser: true, useUnifiedTopology: true});
-    await client.connect((err) => {
-		console.log("[LoginData] Connected successfully to mongoDB");
-		const db = client.db(dbName);
-
-		db.collection('loginData').insertOne(loginData, function (err, collection) {
+    try{
+        const db = client.db('FYP_DATA');
+        db.collection('loginData').insertOne(loginData, function (err, collection) {
 			if (err) throw err;
 			console.log(`[loginData] Record inserted Successfully: ${JSON.stringify(loginData)}`);
 		});
-
-        //find the user in the database and get the role
         let cursor = db.collection('User').find({oid:idTokenClaims.oid}).project({_id:0});
         console.log(`[role] finding User: ${JSON.stringify(idTokenClaims.oid)}`);
         cursor.toArray((err,getUserData) => {
@@ -82,55 +86,84 @@ app.post('/api/login', async(req,res) => {
                     role: "student",
                     oid: idTokenClaims.oid
                 }
-                db.collection('User').insertOne(data, function (err, collection) {
-                    if (err) throw err;
-                    console.log(`[User] Record inserted Successfully: ${JSON.stringify(loginData)}`);
-                });
-                res.json({role:"student"});
-                client.close();
+                try{
+                    db.collection('User').insertOne(data, function (err, collection) {
+                        if (err) throw err;
+                        console.log(`[User] Record inserted Successfully: ${JSON.stringify(loginData)}`);
+                    });
+                    res.json({role:"student"});
+                    
+                }finally{
+                    client.close();
+                }
+                
             }
         });
-    });
-});
-
-app.post('/api/get-role', async(req,res) => {
-    const idTokenClaims = req.body.idTokenClaims
-    const client = new MongoClient(mongourl, {useNewUrlParser: true, useUnifiedTopology: true});
-    await client.connect((err) => {
-		console.log("[role] Connected successfully to mongoDB");
-		const db = client.db(dbName);
-
-        //find the user in the database and get the role
-        let cursor = db.collection('User').find({oid:idTokenClaims.oid}).project({_id:0});
-        console.log(`[role] finding User: ${JSON.stringify(idTokenClaims.oid)}`);
-        cursor.toArray((err,getUserData) => {
-            //handle the result
-            if(getUserData.length > 0) {
-                console.log(`Found User: ${getUserData[0].display_name}`);
-                console.log(`User role: ${getUserData[0].role}`);
-                res.json({role:getUserData[0].role});
-            } else { //If user not found in database, role "student" will be assigned
-                console.log(`[role] No User found in record, assign role "student" to this user`);
-                res.json({role:"student"});
-            }
-        });
+    }finally{
         client.close();
-    });
-
+    }
 });
-app.post('/api/getRooms', async(req,res) => {
-    const client = new MongoClient(mongourl, {useNewUrlParser: true, useUnifiedTopology: true});
-    await client.connect((err) => {
-        const db = client.db(dbName);
-        let cursor = db.collection('Rooms').find({status: true});
+
+app.post('/api/get-role',cors({ origin: false }), async(req,res) => {
+    const idTokenClaims = req.body.idTokenClaims
+    const client = await MongoClient.connect(mongourl,{ useNewUrlParser: true, useUnifiedTopology: true });
+    const db = client.db('FYP_DATA');
+    const collection = db.collection('User');
+    let cursor = collection.find({oid:idTokenClaims.oid}).project({_id:0});
+    console.log(`[role] finding User: ${JSON.stringify(idTokenClaims.oid)}`);
+    const result = await cursor.toArray();
+    if(result.length > 0) {
+        console.log(`Found User: ${result[0].display_name}`);
+        console.log(`User role: ${result[0].role}`);
+        res.json({role:result[0].role});
+    } else { //If user not found in database, role "student" will be assigned
+        console.log(`[role] No User found in record, assign role "student" to this user`);
+        res.json({role:"student"});
+    }
+});
+
+app.get('/download/:note_id', downloadPDF);
+
+async function downloadPDF (req, res){
+    let note_id = req.params.note_id;
+    const client = await MongoClient.connect(mongourl,{ useNewUrlParser: true, useUnifiedTopology: true });
+    const db = client.db('FYP_DATA');
+    const collection = db.collection('courses');
+    const projection = {
+        'notes.$': 1
+      };
+    const pdf = await collection.find({"notes.note_id":note_id},{projection});
+    const result = await pdf.toArray();
+    if (!result) {
+      return res.status(404).json({
+        message: 'PDF file not found',
+      });
+    }
+  
+    const buffer = Buffer.from(result[0].notes[0].content.buffer);
+  
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=${result[0].notes[0].title}.pdf`);
+    res.send(buffer);
+  
+    client.close();
+};
+
+app.post('/api/getRooms',cors({ origin: false }), async(req,res) => {
+    const client = await MongoClient.connect(mongourl,{ useNewUrlParser: true, useUnifiedTopology: true });
+    try{
+        const db = client.db('FYP_DATA');
+        const collection = db.collection('Rooms');
+        let cursor = collection.find({status: true})
         cursor.toArray((err,getRoomData) => {
             res.send({data:getRoomData});
         });
+    }finally{
         client.close();
-    });
-
+    }
 });
-app.post('/api/rooms', async (req, res) => {
+app.get("/socket.io",cors({ origin: false }))
+app.post('/api/rooms',cors({ origin: false }), async (req, res) => {
     const { room_name, quiz_id, create_time, quiz_type, create_by, room_id } = req.body;
   
     // Generate random room ID
@@ -147,17 +180,18 @@ app.post('/api/rooms', async (req, res) => {
         leaderboard: [],
         create_by: create_by,
         question_num: -1,
+        course: 'ELECS431F',
     };
-    
-    const client = new MongoClient(mongourl, {useNewUrlParser: true, useUnifiedTopology: true});
-    await client.connect((err) => {
-        const db = client.db(dbName);
+    const client = await MongoClient.connect(mongourl,{ useNewUrlParser: true, useUnifiedTopology: true });
+    try{
+        const db = client.db('FYP_DATA');
         db.collection('Rooms').insertOne(newRoom, function (err, collection) {
             if (err) throw err;
             console.log(`[Rooms] Record inserted Successfully: ${JSON.stringify(newRoom)}`);
         });
-    });
-    client.close();
+    }finally{
+        client.close();
+    }
   });
 const server = app.listen(port, () => {
     console.log(`Server start at port http://localhost:${port}`)
@@ -165,9 +199,9 @@ const server = app.listen(port, () => {
 
 const io = require('socket.io')(server, {
     cors: {
-        origin: ["http://localhost:5173","https://admin.socket.io"],
+        origin: "*",
         methods: ["GET", "POST"]
-    }
+    },
 })
 
 instrument(io, {
