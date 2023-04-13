@@ -166,7 +166,7 @@ app.get("/socket.io",cors({ origin: false }))
 app.post('/api/rooms',cors({ origin: false }), async (req, res) => {
     const { room_name, quiz_id, create_time, quiz_type, create_by, room_id } = req.body;
   
-    const dataDummy  = [
+    const dataDummy = [
         {
             "playerId": "VL9NS6onZuWkhMnTAAEz",
             "userName": "david",
@@ -260,14 +260,14 @@ app.post('/api/rooms',cors({ origin: false }), async (req, res) => {
     ]
     // Create new room object
     const newRoom : room = {
-        room_id,
-        room_name,
+        room_id:room_id,
+        room_name:room_name,
         status: true,
-        quiz_id,
-        create_time,
+        quiz_id:quiz_id,
+        create_time:create_time,
         finish_time: '',
         quiz_type: quiz_type,
-        leaderboard: dataDemo,
+        leaderboard: dataDummy,
         create_by: create_by,
         question_num: -1,
         course: 'ELECS431F',
