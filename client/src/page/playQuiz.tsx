@@ -608,10 +608,13 @@ function PlayQuiz() {
                         <Col style={{height:"12vh", backgroundColor:"lightblue", marginBottom:"1vh", borderRadius: 30}}>
                             <div style={{height:"12vh",display:'flex', flexWrap: "wrap",alignContent: "center",justifyContent: "space-around"}}>
                                 {joinedRoom && joinRoomMsg()}
+                                {!isStart && 
                                 <div>
-                                    <IconButton onClick={handleOpen}>
+                                <IconButton onClick={handleOpen} sx={{paddingBottom:"5px"}}>
                                         <QrCode2RoundedIcon color='info' fontSize={"large"} />
                                     </IconButton>
+      
+                                   
                                     <Modal
                                         open={open}
                                         onClose={handleClose}
@@ -627,7 +630,7 @@ function PlayQuiz() {
                                         </div>
                                         </Box>
                                     </Modal>
-                                </div>  
+                                </div>}
                             </div>
                             {/* {console.log(roomInfo)} */}
                         </Col>
