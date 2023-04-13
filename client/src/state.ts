@@ -1,5 +1,3 @@
-import exp from "constants"
-
 export type quiz = {
     title: string
     quiz_id: string,
@@ -40,13 +38,12 @@ export type room = {
     room_id: string,
     room_name: string,
     status: boolean,
-    public: boolean,
-    password:string,
+    quiz_type: string,
     quiz_id:string,
-    allow_emoji_popup:boolean,
-    question_num: number,
+    question_num?: number,
     create_time: string,
     finish_time: string,
+    create_by: string,
     leaderboard: profile[],
 }
 
@@ -54,8 +51,6 @@ export type profile = {
     playerId:string,
     userName:string,
     totalPoint:number,
-    mouseleaveTime:number,
-    mouseleaveCount:number,
     answered_question:answered_question[]
 }
 
@@ -63,6 +58,8 @@ export type answered_question = {
     type:string,
     correct:boolean,
     ans:string[],
+    mouseleaveTime:number,
+    mouseleaveCount:number,
 }
 
 export type mcQuiz = {

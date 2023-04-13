@@ -94,8 +94,7 @@ app.post('/api/login', async(req,res) => {
 });
 
 app.post('/api/get-role', async(req,res) => {
-    const idTokenClaims = JSON.parse(req.body.idTokenClaims);
-
+    const idTokenClaims = req.body.idTokenClaims
     const client = new MongoClient(mongourl, {useNewUrlParser: true, useUnifiedTopology: true});
     await client.connect((err) => {
 		console.log("[role] Connected successfully to mongoDB");
@@ -121,22 +120,22 @@ app.post('/api/get-role', async(req,res) => {
 });
 
 app.post('/api/rooms', async (req, res) => {
-    const { room_name, quiz_id, ispublic, password, allow_emoji_popup, create_time } = req.body;
+    const { room_name, quiz_id, create_time, quiz_type, create_by, room_id } = req.body;
   
     // Generate random room ID
-    const room_id = (Math.floor(Math.random() * 99999999) + 1).toString;
+    
     // Create new room object
-    const newRoom = {
-      room_id,
-      room_name,
-      status: true,
-      ispublic,
-      password,
-      quiz_id,
-      allow_emoji_popup,
-      create_time,
-      finish_time: '',
-      leaderboard: []
+    const newRoom : room = {
+        room_id,
+        room_name,
+        status: true,
+        quiz_id,
+        create_time,
+        finish_time: '',
+        quiz_type: quiz_type,
+        leaderboard: [],
+        create_by: create_by,
+        question_num: -1,
     };
     
     const client = new MongoClient(mongourl, {useNewUrlParser: true, useUnifiedTopology: true});
