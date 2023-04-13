@@ -163,7 +163,7 @@ function CreateRoomForm() {
 						disabled={userRole === "student"}
 					>
 						<ToggleButton value="Live">Live</ToggleButton>
-						<ToggleButton value="Attendant">Attendant</ToggleButton>
+						<ToggleButton value="Attendance">Attendance</ToggleButton>
 					</ToggleButtonGroup>
 
 					<Box sx={{

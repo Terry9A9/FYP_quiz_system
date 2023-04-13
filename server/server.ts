@@ -166,8 +166,98 @@ app.get("/socket.io",cors({ origin: false }))
 app.post('/api/rooms',cors({ origin: false }), async (req, res) => {
     const { room_name, quiz_id, create_time, quiz_type, create_by, room_id } = req.body;
   
-    // Generate random room ID
-    
+    const dataDummy  = [
+        {
+            "playerId": "VL9NS6onZuWkhMnTAAEz",
+            "userName": "david",
+            "totalPoint": 550,
+            "mouseleaveTime": 0,
+            "mouseleaveCount": 0,
+            "answered_question": [
+                {
+                    "type": "mc",
+                    "correct": true,
+                    "ans": [
+                        "H_C,H_AB,H_EFGH,H_IJKLMNOP"
+                    ],
+                    "mouseleaveCount": 2,
+                    "mouseleaveTime": 0
+                },
+                {
+                    "type": "mc",
+                    "correct": false,
+                    "ans": [
+                        "None of the above"
+                    ],
+                    "mouseleaveCount": 0,
+                    "mouseleaveTime": 0
+                },
+                {
+                    "type": "mc",
+                    "correct": true,
+                    "ans": [
+                        "truffle migrate"
+                    ],
+                    "mouseleaveCount": 2,
+                    "mouseleaveTime": 1681384118
+                },
+                {
+                    "type": "mc",
+                    "correct": true,
+                    "ans": [
+                        "False"
+                    ],
+                    "mouseleaveCount": 6,
+                    "mouseleaveTime": 14
+                }
+            ]
+        },
+        {
+            "playerId": "A1_Om0mWqmwkUStLAAEF",
+            "userName": "Roy",
+            "totalPoint": 550,
+            "mouseleaveTime": 0,
+            "mouseleaveCount": 0,
+            "answered_question": [
+                {
+                    "type": "mc",
+                    "correct": true,
+                    "ans": [
+                        "H_C,H_AB,H_EFGH,H_IJKLMNOP"
+                    ],
+                    "mouseleaveCount": 1,
+                    "mouseleaveTime": 0
+                },
+                {
+                    "type": "mc",
+                    "correct": false,
+                    "ans": [
+                        "PoS protocol"
+                    ],
+                    "mouseleaveCount": 4,
+                    "mouseleaveTime": 1681384103
+                },
+                {
+                    "type": "mc",
+                    "correct": true,
+                    "ans": [
+                        "truffle migrate"
+                    ],
+                    "mouseleaveCount": 3,
+                    "mouseleaveTime": 2
+                },
+                {
+                    "type": "mc",
+                    "correct": true,
+                    "ans": [
+                        "False"
+                    ],
+                    "mouseleaveCount": 6,
+                    "mouseleaveTime": 14
+                }
+            ]
+        }
+    ]
     // Create new room object
     const newRoom : room = {
         room_id,
@@ -177,7 +267,7 @@ app.post('/api/rooms',cors({ origin: false }), async (req, res) => {
         create_time,
         finish_time: '',
         quiz_type: quiz_type,
-        leaderboard: [],
+        leaderboard: dataDemo,
         create_by: create_by,
         question_num: -1,
         course: 'ELECS431F',
