@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TextField, Button, Box, Grid, colors } from '@mui/material';
+import { TextField, Button, Box, Grid, colors, Link, ListItemAvatar, ListItemButton } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { makeStyles } from 'tss-react/mui';
 
@@ -27,6 +27,8 @@ import Typography from "@mui/material/Typography";
 import { handleLogin, handleLogout, getUserData } from '../../../server/controllers/loginFunction';
 import { userProfile } from "../state";
 import _ from 'lodash'
+import QuizIcon from '@mui/icons-material/Quiz';
+import ShortcutIcon from '@mui/icons-material/Shortcut';
 
 
 const useStyles = makeStyles()((theme) => {
@@ -80,6 +82,10 @@ const EnterRoomId = () => {
         navigate(`/play/quiz/${room_id}`);
     };
 
+    const goAttRoom = (room_id) => {
+        navigate(`/attendanceQuiz/${room_id}`, { replace: true });
+    }
+
     const [MenuOpen, setMenuOpen] = useState(false);
     const [anchor, setAnchor] = useState('left');
 
@@ -95,26 +101,26 @@ const EnterRoomId = () => {
 
     // Call the getUserData function when the component loads
     useEffect(() => {
-        
+
         if (_.isEmpty(user)) {
             getUserData().then(data => {
                 setUser(data);
             });
         }
-       
-        const list= async ()=>{ 
-            
-            const roleRes = await fetch('http://localhost:3004/api/getRooms', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        })
-        const jsonData = await roleRes.json();
-        setRoomlist(jsonData.data);
-    };
 
-    list();
+        const list = async () => {
+
+            const roleRes = await fetch('http://localhost:3004/api/getRooms', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            const jsonData = await roleRes.json();
+            setRoomlist(jsonData.data);
+        };
+
+        list();
 
     }, []);
     console.log(Roomlist);
@@ -221,18 +227,39 @@ const EnterRoomId = () => {
                                 }}
                                 subheader={<li />}
                             >
-                                {[0, 1, 2, 3, 4].map((sectionId) => (
-                                    <li key={`section-${sectionId}`}>
-                                        <ul>
-                                            <ListSubheader>{`I'm sticky ${sectionId}`}</ListSubheader>
-                                            {[0, 1, 2].map((item) => (
-                                                <ListItem key={`item-${sectionId}-${item}`}>
-                                                    <Button onClick={() => handleSubmitGpt("Lect01_1")}>GPT</Button>
-                                                </ListItem>
-                                            ))}
-                                        </ul>
-                                    </li>
-                                ))}
+                                {user?.displayName && 
+                                    <>
+                                    <li key={`section-0`}>
+                                    <ul>
+                                        <ListSubheader>{`Advanced Database And Data Warehousing (COMP S321F)`}</ListSubheader>
+                                        {["321F Lect01-ch13_EERD_v1", "321F Lect02-ch14_Normal_i_v1"].map((item, index) => (
+                                            <ListItem key={`item-${0}-${item}`} style={{ display: 'flex', flexDirection: "row", justifyContent: "space-between" }}>
+                                                <Link href="http://localhost:3004/download/COMPS321F_Lect02_1" color="inherit">
+                                                    Lecture {index + 1}: {item}
+                                                </Link>
+
+                                                <Button onClick={() => handleSubmitGpt("COMPS321F_Lect02_1")}><QuizIcon /></Button>
+                                            </ListItem>
+                                        ))}
+                                    </ul>
+                                </li>
+                                <li key={`section-1`}>
+                                    <ul>
+                                        <ListSubheader>{`Blockchain Technologies     (ELEC S431F)`}</ListSubheader>
+                                        {["Lec01_v1", "Lec02_decentralization"].map((item, index) => (
+                                            <ListItem key={`item-${1}-${item}`} style={{ display: 'flex', flexDirection: "row", justifyContent: "space-between" }}>
+                                                <Link href="http://localhost:3004/download/COMPS321F_Lect02_1" color="inherit">
+                                                    Lecture {index + 1}: {item}
+                                                </Link>
+                                                <Button onClick={() => handleSubmitGpt("COMPS321F_Lect02_1")}><QuizIcon /></Button>
+                                            </ListItem>
+                                        ))}
+                                    </ul>
+                                </li>
+                                    </>
+                                }
+                                
+
                             </List>
                             <Grid container
                                 xs={12}
@@ -292,24 +319,37 @@ const EnterRoomId = () => {
                                     height: '69vh',
                                     marginLeft: '7.5%',
                                 }}>
-                                <Grid item xs={12} style={{ borderTopLeftRadius: '15px ', borderTopRightRadius: '15px ', boxShadow: '0px 4px 4px rgba(130, 130, 130, 0.25)', backgroundColor: 'rgba(52, 154, 227, 0.8)', height: '15%' }}>
-                                    <Box>
-                                    <h3>Active Rooms</h3>
+                                <Grid item xs={12} style={{ borderTopLeftRadius: '15px ', borderTopRightRadius: '15px ', boxShadow: '0px 4px 4px rgba(130, 130, 130, 0.25)', backgroundColor: 'rgba(52, 154, 227, 0.8)', height: '15%', display:'flex', justifyContent:"center", alignItems:"center" }}>
+                                    <Box sx={{}}>
+                                        <Typography variant='h4'>Active Rooms</Typography>
                                     </Box>
                                 </Grid>
                                 <Grid item xs={12} style={{ height: '85%', backgroundColor: 'rgba(252,252,252,0.85)', borderBottomLeftRadius: '15px ', borderBottomRightRadius: '15px ' }}>
                                     <Box >
-                                    <ul>
-                {user&&Roomlist.length>0 && Roomlist?.map(room => (
-                    <li><Button onClick={() => goRoom(room.room_id)}>{room.room_name}</Button></li>
-                ))}
-            </ul>
+                                        <List sx={{ width: '100%', maxWidth: 360, bgcolor: 'transparent', paddingLeft:"10px" }}>
+                                            {user && Roomlist.length > 0 && Roomlist?.map(room => (
+                                                room.quiz_type == "Live" ? <ListItem secondaryAction={
+                                                    <IconButton edge="end" aria-label="Shortcut" color='primary' onClick={()=>goRoom(room.room_id)}>
+                                                      <ShortcutIcon />
+                                                    </IconButton>
+                                                  }>
+                                                    <ListItemText primary={`${room.course}: ${room.room_name}`} secondary={`${room.quiz_type} quiz`} />
+                                                        
+                                                </ListItem>: 
+                                                            <ListItem secondaryAction={
+                                                                <IconButton edge="end" aria-label="Shortcut" color='primary' onClick={()=>goAttRoom(room.room_id)}>
+                                                                  <ShortcutIcon />
+                                                                </IconButton>
+                                                              }>
+                                                                <ListItemText primary={`${room.course}: ${room.room_name}`} secondary={`${room.quiz_type} quiz`} />
+                                                                </ListItem>
+                                            ))}
+                                        </List>
                                     </Box>
                                 </Grid>
                             </Grid>
                         </Col>
                     </Row>
-
                 </div>
             </Box>
         </>

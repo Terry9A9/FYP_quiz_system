@@ -44,6 +44,7 @@ export type room = {
     create_time: string,
     finish_time: string,
     create_by: string,
+    course: string,
     leaderboard: profile[],
 }
 

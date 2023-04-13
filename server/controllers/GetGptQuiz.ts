@@ -40,6 +40,7 @@ export async function GptQuizAPI (note_id) {
                 `},
             ]
         })
+        console.log(res.data.choices[0].message.content)
         return res.data.choices[0].message.content
         // fs.writeFile('Output.txt', res.data.choices[0].message.content, (err) => {
         //     if (err) throw err;
