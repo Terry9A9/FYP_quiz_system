@@ -1,8 +1,8 @@
 import * as React from 'react';
-import {useState, useEffect} from 'react'
+import {useState, useEffect, useMemo } from 'react'
 import webSocket from 'socket.io-client'
-import {useParams} from "react-router-dom";
-
+import {useNavigate, useParams} from "react-router-dom";
+import GroupsIcon from '@mui/icons-material/Groups';
 import StarsIcon from '@mui/icons-material/Stars';
 import MilitaryTechIcon from '@mui/icons-material/MilitaryTech';
 import SpeedIcon from '@mui/icons-material/Speed';
@@ -16,10 +16,9 @@ import {
     Box,
     TextField,
     Dialog,
-    useMediaQuery, DialogTitle, DialogContent, DialogActions, Badge,
+    useMediaQuery, DialogTitle, DialogContent, DialogActions, Badge, Typography, Card, CardMedia, CircularProgress,
 } from '@mui/material';
 
-import {useIsPresent, motion} from "framer-motion"
 
 import { Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
@@ -28,7 +27,7 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 import {quiz, profile, userProfile, answered_question, room} from "../state";
 import _ from 'lodash';
 import { getUserData } from '../../../server/controllers/loginFunction';
-import e from 'cors';
+import { orange } from '@mui/material/colors';
 
 const useStyles = makeStyles()((theme) => {
     return {
@@ -110,44 +109,15 @@ function PlayQuiz() {
     const [OutCount,setOutCount] = useState(0 as number)
     const [Time0,setTime0] = useState(0 as number)
     const [Time,setTime] = useState(0 as number)
-    const [enter,setEnter]= useState(false as boolean)
+    const [enter,setEnter]= useState(true as boolean)
 
     const [out,setOut]= useState(false as boolean)
     const [timeone,setTimeone]=useState(false as boolean)
     const [user, setUser] = useState({} as userProfile);
     
-    useEffect(() => {
-        if(_.isEmpty(user)) {
-            getUserData().then((user) => {
-                setUser(user);
-            });
-          }
-    }, [])
+    const navigate = useNavigate();
 
-
-    useEffect(()=>{
-        if(enter){
-            let temp = Math.floor((Date.now()-Time0)/1000)
-            setTime((Time)=>(Time+temp))
-            console.log(temp+"+"+Date.now()+"-"+Time0)
-        }else{
-            setTime0(Date.now)
-            setOutCount(OutCount+1)
-        }
-    },[enter])
-
-
-    const {classes} = useStyles();
-    let {roomId} = useParams(); //get URL params
-
-    //initWebSocket
-    useEffect(() => {
-        if (ws) {
-            initWebSocket()
-            console.log('initWebSocket!')
-        }
-    }, [ws])
-
+    
     useEffect(() => {
         if (timerStatus && times > 0) {
             // times == 0 ? clearInterval(timer)
@@ -165,21 +135,71 @@ function PlayQuiz() {
         }
     }, [timerStatus, times])
 
-    function WaitCountDown() { //react component
+    useEffect(() => {
+        if(_.isEmpty(user)) {
+            getUserData().then((user) => {
+                setUser(user);
+            });
+          }
+    }, [])
+
+
+    useEffect(()=>{
+        if(timerStatus){
+            if(enter){
+                let temp = Math.floor((Date.now()-Time0)/1000)
+                setTime((Time)=>(Time+temp))
+                console.log(temp+"="+Date.now()+"-"+Time0)
+            }else{
+                console.log("mouse left!!")
+                setTime0(Date.now)
+                setOutCount(OutCount+1)
+            }
+        }
+    },[enter])
+
+
+    const {classes} = useStyles();
+    let {roomId} = useParams(); //get URL params
+
+    //initWebSocket
+    useEffect(() => {
+        if (ws) {
+            initWebSocket()
+            console.log('initWebSocket!')
+        }
+    }, [ws])
+
+ 
+    interface Props {
+        time: number;
+      }
+
+    const CountDown = React.memo(({time}: Props) => { //react component
+
         return (
             <>
-                <Grid container>
-                    <Grid item md={6}>
-                        wait for question times up
-                    </Grid>
-                    <Grid item md={6}>
-                        <h1>
-                            {timerStatus && (`Time remain: ${times}s`)}
-                        </h1>
-                    </Grid>
-                </Grid>
-
+                {timerStatus &&
+                    <Typography variant="h3">
+                        Time remain: {times}s
+                    </Typography>   
+                }
             </>
+        )
+    })
+
+    function WaitCountDown(){
+        return (
+            <>
+            <Row className={classes.bg} style={{height: "70vh", borderRadius:"2vh", alignItems:"center", justifyContent:"center", flexDirection: "column"}}>
+                <Col md={2}>
+                    
+                    <div style={{display:"flex", alignItems:"center", justifyContent:"center", flexDirection: "column"}}>
+                        Wait for times up
+                    </div>
+                </Col>
+            </Row>
+        </>
         )
     }
 
@@ -190,12 +210,9 @@ function PlayQuiz() {
                 <div
                     className={classes.waiting}
                 >
-                    <motion.div
-                        style={{height:"70vh", width:"50vh"}}
-                        className={`${classes.bg}`}
-                        initial={{ height: "5vh", width: "5vh", borderRadius: 100 }}
-                        animate={{ height: "70vh", width: "100%", borderRadius: 30}}
-                        exit={{opacity:0}}
+                    <div
+                        style={{height:"70vh", width:"100%", borderRadius:30}}
+                        className={classes.bg}
                     >
                         <Box
                             sx={{
@@ -217,7 +234,7 @@ function PlayQuiz() {
                                 <SpeedIcon/>{`timmy`}
                             </Item>
                         </Box>
-                    </motion.div>
+                    </div>
                 </div>
             </>
         )
@@ -225,38 +242,50 @@ function PlayQuiz() {
 
     function QuestionComponent() {  //react component
         return (
-            <>
+            <div style={{height:"75vh", width:"100%", borderRadius:30, display:"flex", flexDirection:"column", justifyContent:"space-between", padding:'30px'}}
+            className={classes.bg}>
                 <Row>
-                    <Col>
-                        <h1>
+                    <Col md={9}>
+                        <Typography variant='h4'>
                             {questionNum >= 0 && (
                                 `Q${questionNum + 1}: ${questionSet[questionNum]?.question}`)}
-                        </h1>
+                        </Typography>
                     </Col>
-                    <Col>
-                        <h1>
-                            {timerStatus && (`Time remain: ${times}s`)}
-                        </h1>
+                    <Col style={{display: "flex", justifyContent: "center"}}>
+                        <Typography variant='h4'>
+                            Point: {totalPoint}
+                        </Typography>
                     </Col>
                 </Row>
-                <Row>
-                    <Col>point: {totalPoint}</Col>
+                <Row style={{justifyContent: "center"}}>
+                    {questionSet[questionNum]?.img && 
+                    <Card variant="outlined" sx={{ maxHeight: "40vh", width: 600, height:"400" }}>
+                        <CardMedia
+                            component="img"
+                    
+                            src= {`data:image/jpg;base64, ${questionSet[questionNum]?.img}`}
+                            alt="Paella dish"
+                        />
+                    </Card>}   
                 </Row>
-                <Row>
-                    <Col>
+                <Row style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", height:"25vh"}}>
                         {questionSet[questionNum]?.answers.map((question, index) =>
                             <>
-                                <Button onClick={() => {setSelectedAns(question);setWaitMsg(true)}}
-                                       variant="contained" color="primary">
-                                       {question}{index}
-                                </Button>
-                                <br/>
-                                <br/>
+                                <Col md={6} style={{ marginBottom: "10px", display: "flex", justifyContent: "center" }}>
+                                    <Button onClick={() => { setSelectedAns(question); setWaitMsg(true) }}
+                                        variant="contained" color="primary" size="large" fullWidth
+                                        style={{
+                                            width: "100%",
+                                            backgroundColor: "lightblue",
+                                          }}
+                                        >
+                                            <Typography variant='h6' color={"black"}>{question}</Typography>
+                                    </Button>
+                                </Col>
                             </>
                         )}
-                    </Col>
                 </Row>
-            </>
+            </div>
         )
     }
 
@@ -278,7 +307,15 @@ function PlayQuiz() {
         }]
     }
 
+   
+
     function Rank(){  //Rank component 
+        let color = [
+            'rgb(255, 99, 132)',
+            'rgb(54, 200, 235)',
+            'rgb(65, 97, 235)',
+            'rgb(255 , 223, 186)'
+        ]
         console.log(rankInfo.map((e)=>e.answered_question[questionNum]))
         let answered = rankInfo.map((e)=>e.answered_question[questionNum]?.ans).flatMap(str => str)
         answered = answered.filter(str => str != "" || str != undefined)
@@ -286,43 +323,47 @@ function PlayQuiz() {
         let datae = questionSet[questionNum].answers.map((e,index)=>answered.filter(str => str == e))
         let data = datae.map((e)=>Number((e.length/answered.length).toFixed(2))*100)
         //data = [50,50]
-        console.log(datae+"data")
+        
+        let backgroundColor = questionSet[questionNum].answers.map((e,index)=> e == questionSet[questionNum].correct ? "rgb(92,184,92)": color[index])
+        
         let questionStat = {    
             labels: questionSet[questionNum].answers,
             datasets: [{
-                label: `Question ${questionNum}`,
+                label: `Question ${questionNum + 1}`,
                 data: data,
-                backgroundColor: [
-                    'rgb(255, 99, 132)',
-                    'rgb(54, 200, 235)',
-                    'rgb(63, 53, 23)',
-                    'rgb(65, 97, 235)',
-                ],
+                backgroundColor: backgroundColor,
                 hoverOffset: 4
             }]
         }
+        console.log(questionStat)
         setTimeout(() => {console.log("point-submit")}, 1000)
         return (
             <>
-                <Row className={classes.bg} style={{height: "80vh", borderRadius:"2vh"}}>
-                <Col style={{display: 'flex', alignItems:"center", justifyContent:"center"}}>
-                   <div> <Doughnut data={questionStat} redraw={true} /></div>
+                <Row className={classes.bg} style={{height: "70vh", borderRadius:"2vh"}}>
+                <Col style={{display: 'flex', alignItems:"center", justifyContent:"center", flexDirection: "column"}}>
+                    <Row>
+                        <Typography variant="h5">Q{questionNum+1}. {questionSet[questionNum].question}</Typography>
+                    </Row>
+                    <Row>
+                        <div> <Doughnut data={questionStat} redraw={true} /></div>  
+                    </Row>
+                   
                 </Col>
-                <Col>
+                <Col sx={12}>
                     <Grid container alignItems="center" justifyContent="center" spacing={1} style={{height: "100%"}}>
                             {rankInfo.map((e,index) => (
                                 <>
-                                    <Grid item lg={1}>
-                                        <Item >
+                                    <Grid item sm={2} lg={1}>
+                                        <Item>
                                             {index+1}
                                         </Item>
                                     </Grid>
-                                    <Grid item lg={8}>
+                                    <Grid item sm={7} lg={8}>
                                         <Item >
                                             {e.userName}
                                         </Item>
                                     </Grid>
-                                    <Grid item lg={3}>
+                                    <Grid item sm={3} lg={3}>
                                         <Item >
                                             {e.totalPoint}
                                         </Item>
@@ -339,16 +380,13 @@ function PlayQuiz() {
     function StartButton() {
         return (
                 <div className={classes.center}>
-                    <motion.div
+                    <div
                         className={`${classes.sButton}`}
-                        whileHover={{ scale: 1.2 }}
-                        whileTap={{ scale: 0.9 }}
-                        transition={{ type: "spring", stiffness: 400, damping: 17 }}
                         onClick={startQuiz}
                         style={{backgroundColor: "#eeaeca"}}
                     >
                         Quiz Start
-                    </motion.div>
+                    </div>
                 </div>
             )
     }
@@ -360,23 +398,54 @@ function PlayQuiz() {
     function NextButton() {
         return (
             <div className={classes.center} style={{float:"right"}}>
-                <motion.div
+                <div
                     className={classes.sButton}
-                    whileHover={{ scale: 1.2 }}
-                    whileTap={{ scale: 0.9 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
                     onClick={!showRank ? endTimer : nextQuestion}
                     style={{backgroundColor: "#94bbe9"}}
                 >
                     Next Question
-                </motion.div>
+                </div>
             </div>
         )
     }
 
-    const joinRoomMsg = () => {
+    function FinishButton() {
         return (
-            <h4>joined quiz room {roomId}</h4>
+            <div className={classes.center} style={{float:"right"}}>
+                <div
+                    className={classes.sButton}
+                    onClick={() => {handleFinish}}
+                    style={{backgroundColor: "#94bbe9"}}
+                >
+                    Finish
+                </div>
+            </div>
+        )
+    }
+
+
+    const joinRoomMsg = () => {
+        if(showRank && isStart){
+            if(selectedAnsIndex == questionSet[questionNum]?.correct){
+                return <Typography variant="h4">You Are Correct!</Typography>
+            }else{
+                return (
+                    <>
+                    <Typography variant="h4">You Are Wrong!</Typography>
+                    <Typography variant="h4">The Correct Answer is: {questionSet[questionNum]?.correct}</Typography>
+                    </>
+                )
+            }
+        }else if(isStart){
+            return <CountDown time={times}/>
+        }
+        return (
+            <>
+                <Typography variant="h4">Title: {roomInfo && roomInfo.room_name}</Typography>
+                <Typography variant="h4">
+                    <GroupsIcon fontSize={'large'}/> {roomInfo && roomInfo.leaderboard?.length}
+                </Typography>
+            </>
         )
     }
 
@@ -421,6 +490,10 @@ function PlayQuiz() {
         ws.on('next-question', (msg) => {
             setQuestionNum(msg)
             setShowRank(false)
+            setSelectedAns("")
+            setOutCount(0)
+            setTime(0)
+            setTime0(0)
         })
         ws.on('point', (msg) => {
             setTotalPoint((p) => p+msg)
@@ -438,10 +511,15 @@ function PlayQuiz() {
 
     const nextQuestion = () => {
         ws.emit('next-question', {roomId: roomId, questionNum: questionNum + 1, time: quiz.time});
+        setOutCount(0)
+        setTime(0)
+        setTime0(0)
     }
 
     function submit_ans () {
         if (!timerStatus) {
+            console.log("OutCount"+OutCount)
+            console.log("OutTime"+Time)
             let tempMyInfo = myInfo
             console.log(myInfo.userName+"tempMyInfo")
             let point = tempMyInfo.totalPoint
@@ -454,46 +532,49 @@ function PlayQuiz() {
             let answered = {
                 type:"mc",
                 correct: correct,
-                ans: [String(selectedAnsIndex)]//mc index
+                ans: [String(selectedAnsIndex)],//mc index
+                mouseleaveCount: OutCount, 
+                mouseleaveTime: Time
             }
             tempMyInfo['answered_question'].push(answered)
             tempMyInfo.totalPoint = point
             setTotalPoint(point)
             setMyInfo(tempMyInfo)
-            ws.emit('point-submit', {roomId: roomId, totalPoint: myInfo.totalPoint, myInfo: myInfo});
+            ws.emit('point-submit', {roomId: roomId, totalPoint: myInfo.totalPoint, myInfo: myInfo, });
             console.log(myInfo)
-            setSelectedAns("")
+            setOutCount(0)
+            setTime(0)
+            setTime0(0)
         } else {
             setWaitMsg(true);
         } 
     }
 
     const handleMouseLeave = () => {
-        setEnter(false)
-        if (isStart){
+        if (timerStatus && !showRank){
+            setEnter(false)
             document.querySelector("#show");
             infoModal.showModal()
-            setOutCount(OutCount+1)
-            setMouseMsg("mouse Leave!!")
             console.log("mouse Leave!!")
         }
 
     }
 
+    const handleFinish = () => {
+        ws.emit('quiz-finish', {roomInfo: roomInfo});
+        navigate("/")
+    }
+
     const handleMouseEnter = () => {
-        if (isStart){
-            infoModal.close()
-            setEnter(true)
-            setMouseMsg("mouse Enter!!")
-            console.log("mouse Enter!!")
-        }
+        setEnter(true)
+        infoModal.close()
 
     }
 
     return (
         <div
-        // onMouseLeave={() => handleMouseLeave()}
-        // onMouseEnter={() => handleMouseEnter()}
+        onMouseLeave={() => handleMouseLeave()}
+        onMouseEnter={() => handleMouseEnter()}
         tabIndex={0}
         style={{height: "100vh"}}
         >
@@ -502,21 +583,24 @@ function PlayQuiz() {
                 <br/>
                 <Container>
                     <Row>
-                        <Col>
-                            <div style={{height:"12vh", backgroundColor:"red", marginBottom:"1vh"}}>
+                        <Col style={{height:"12vh", backgroundColor:"lightblue", marginBottom:"1vh", borderRadius: 30,}}>
+                            <div style={{height:"12vh",display:'flex', flexWrap: "wrap",alignContent: "center",justifyContent: "space-around"}}>
                                 {joinedRoom && joinRoomMsg()}
                             </div>
-                            {console.log(roomInfo)}
+                            {/* {console.log(roomInfo)} */}
                         </Col>
                     </Row>
-                    <Row>
+                    <Row style={{justifyContent: "center"}}>
                         {waitMsg ? <WaitCountDown/> : showRank && isStart? <Rank/> : isStart? <QuestionComponent/>: <WaitingRoomComponent/>}
                     </Row>
                     <Row>
                         <Col>
-                            {!isStart && <StartButton/>}
-                            {questionNum + 1 < questionSet?.length ?
-                                <NextButton/> : " "}
+                            {!isStart && user?.id && user?.id == roomInfo.create_by && <StartButton/>}
+                            {user?.id == roomInfo.create_by && showRank && isStart && questionNum + 1 < questionSet?.length ?
+                                <NextButton/> : ""}
+                                {
+                                    ! (questionNum + 1 < questionSet?.length)  && isStart && <FinishButton/>
+                                }
                         </Col>
                     </Row>
                     <br/>
