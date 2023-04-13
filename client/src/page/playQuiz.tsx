@@ -16,9 +16,9 @@ import {
     Box,
     TextField,
     Dialog,
-    useMediaQuery, DialogTitle, DialogContent, DialogActions, Badge, Typography, Card, CardMedia, CircularProgress,
+    useMediaQuery, DialogTitle, DialogContent, DialogActions, Badge, Typography, Card, CardMedia, CircularProgress, Modal, IconButton
 } from '@mui/material';
-
+import QrCode2RoundedIcon from '@mui/icons-material/QrCode2Rounded';
 
 import { Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
@@ -28,6 +28,9 @@ import {quiz, profile, userProfile, answered_question, room} from "../state";
 import _ from 'lodash';
 import { getUserData } from '../../../server/controllers/loginFunction';
 import { orange } from '@mui/material/colors';
+
+import QRCode from 'react-qr-code';
+import { LayoutGroup } from 'framer-motion';
 
 const useStyles = makeStyles()((theme) => {
     return {
@@ -74,7 +77,18 @@ const Item = styled(Paper)(({ theme }) => ({
     color: theme.palette.text.secondary,
 }));
 
-
+const qrcodeModalstyle = {
+    position: 'absolute' as 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: 600,
+    bgcolor: 'background.paper',
+    border: '2px solid #000',
+    boxShadow: 24,
+    p: 4,
+    display: 'flex', flexWrap: "wrap", alignContent: "center", justifyContent: "space-around"
+};
 
 function PlayQuiz() {
     const theme = useTheme();
@@ -117,6 +131,9 @@ function PlayQuiz() {
     
     const navigate = useNavigate();
 
+    const [open, setOpen] = React.useState(false);
+    const handleOpen = () => setOpen(true);
+    const handleClose = () => setOpen(false);
     
     useEffect(() => {
         if (timerStatus && times > 0) {
@@ -586,6 +603,26 @@ function PlayQuiz() {
                         <Col style={{height:"12vh", backgroundColor:"lightblue", marginBottom:"1vh", borderRadius: 30,}}>
                             <div style={{height:"12vh",display:'flex', flexWrap: "wrap",alignContent: "center",justifyContent: "space-around"}}>
                                 {joinedRoom && joinRoomMsg()}
+                                <div>
+                                    <IconButton onClick={handleOpen}>
+                                        <QrCode2RoundedIcon color='info' fontSize={"large"} />
+                                    </IconButton>
+                                    <Modal
+                                        open={open}
+                                        onClose={handleClose}
+                                    >
+                                        <Box sx={qrcodeModalstyle}>
+                                            <div>
+                                                <QRCode
+                                                    size={512}
+                                                    style={{ width: "100%" }}
+                                                    value={window.location.href}
+                                                    viewBox={`0 0 256 256`}
+                                                />
+                                        </div>
+                                        </Box>
+                                    </Modal>
+                                </div>  
                             </div>
                             {/* {console.log(roomInfo)} */}
                         </Col>
