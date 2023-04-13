@@ -23,6 +23,7 @@ export function liveQuiz(io) {
 
         socket.on('join-room', (roomId, studId) => {
             socket.join(roomId);
+            console.log(`user ${studId} join room ${roomId}`)
             let roomIndex = roomArr.findIndex(x => x.room_id == roomId)
             const myInfo = {
                 playerId:socket.id,
@@ -72,6 +73,16 @@ export function liveQuiz(io) {
             })
         })
 
+        socket.on('quiz-finish', ({roomInfo: roomInfo}) => {
+            console.log("quiz-finish")
+            let roomIndex = roomArr.findIndex(x => x.room_id == roomInfo.room_id);
+            roomArr[roomIndex].status = false;
+            dbconnect("replaceRoom", roomArr[roomIndex],(roomInfo) => {
+                console.log(roomInfo)
+            }) 
+            // roomArr.splice(roomIndex,1)
+        })
+
         // when timer end, emit end-timer to client
         socket.on('end-timer',({roomId:roomId}) => {
             io.sockets.to(roomId).emit('timerStatus', {status: false , time: 0});
@@ -88,11 +99,11 @@ export function liveQuiz(io) {
         // when count down end client submit the total point then we rank it and update the leaderboard
         socket.on('point-submit', ({roomId: roomId, totalPoint: totalPoint, myInfo: myInfo}) => { 
             let roomIndex = roomArr.findIndex((e) => e.room_id === roomId)
-            let rankIndex = roomArr[roomIndex].leaderboard?.findIndex((e) => e.userName === myInfo.userName)
+            let rankIndex = roomArr[roomIndex]?.leaderboard?.findIndex((e) => e.userName === myInfo.userName)
             if ( rankIndex != -1){
                 roomArr[roomIndex].leaderboard[rankIndex] = myInfo
             }else{
-                roomArr[roomIndex].leaderboard.push(myInfo)
+                roomArr[roomIndex]?.leaderboard.push(myInfo)
             }
             rank[roomId] = roomArr[roomIndex].leaderboard
             rank[roomId].sort((a,b)=> b.totalPoint - a.totalPoint)
@@ -102,6 +113,12 @@ export function liveQuiz(io) {
         })
     })
 
+    const dbReplaceRoom = async (db, criteria, replace, callback) => {
+        let replaceRoomData = {};
+        const result = await db.collection('Rooms').replaceOne(criteria, replace)
+        console.log(`Modified ${result.modifiedCount} document(s)`);
+        callback("success")
+    }
 
     const dbSearchQuiz = (db, criteria, callback) => {
         let getQuizData = {};
@@ -138,44 +155,59 @@ export function liveQuiz(io) {
 
 
     const dbconnect = (queryTpye, queryValue ,callback) => {
-        let fetchQuizData = {} as quiz;
-        let fetchRoomData = {} as room;
-        const client = new MongoClient(mongourl, {useNewUrlParser: true, useUnifiedTopology: true});
-        client.connect((err) => {
-            assert.equal(null, err);
-            console.log("Connected successfully to mongoDB");
-            const db = client.db(dbName);
+        try {
+            let fetchQuizData = {} as quiz;
+            let fetchRoomData = {} as room;
+            const client = new MongoClient(mongourl, { useNewUrlParser: true, useUnifiedTopology: true });
+            client.connect((err) => {
+                try{
+                    assert.equal(null, err);
+                    console.log("Connected successfully to mongoDB");
+                    const db = client.db(dbName);
+    
+                    //find quiz with passing the search criteria
+                    console.log(queryTpye)
+    
+                    switch (queryTpye) {
+                        case "quiz":
+                            let quizQuery = {};
+                            console.log(`finding quiz...`);
+                            quizQuery['quiz_id'] = queryValue;
+                            dbSearchQuiz(db, quizQuery, (getQuizData) => {  // docs contain 1 document (hopefully)
+                                client.close();
+                                console.log("Close DB connection");
+                                fetchQuizData = getQuizData;
+                                callback(fetchQuizData) as quiz
+                            });
+                            break;
+    
+                        case "room":
+                            let roomQuery = {};
+                            console.log(`finding room...`);
+                            roomQuery['room_id'] = queryValue;
+                            dbSearchRoom(db, roomQuery, (getRooomData) => {  // docs contain 1 document (hopefully)
+                                client.close();
+                                console.log("Close DB connection");
+                                fetchRoomData = getRooomData;
+                                callback(fetchRoomData) as room
+                            });
+                            break;
+    
+                        case "replaceRoom":
+                            let replaceRoomQuery = {};
+                            console.log(`replace room...`);
+                            replaceRoomQuery['room_id'] = queryValue.room_id;
+                            dbReplaceRoom(db, replaceRoomQuery, queryValue, (getRooomData) => {
+                                client.close();
+                                console.log("Close DB connection");
+                            })
+                            break;
+                    }
+                }catch{ console.error("mongoDB connection error")}
+               
 
-            //find quiz with passing the search criteria
-            console.log(queryTpye)
-
-            switch(queryTpye){
-                case "quiz" :
-                    let quizQuery = {};
-                    console.log(`finding quiz...`);
-                    quizQuery['quiz_id'] = queryValue;
-                    dbSearchQuiz(db, quizQuery, (getQuizData) => {  // docs contain 1 document (hopefully)
-                        client.close();
-                        console.log("Close DB connection");
-                        fetchQuizData = getQuizData;
-                        callback(fetchQuizData) as quiz
-                    });
-                    break;
-                
-                case "room":
-                    let roomQuery = {};
-                    console.log(`finding room...`);
-                    roomQuery['room_id']=queryValue;
-                    dbSearchRoom(db, roomQuery, (getRooomData) => {  // docs contain 1 document (hopefully)
-                        client.close();
-                        console.log("Close DB connection");
-                        fetchRoomData = getRooomData;
-                        callback(fetchRoomData) as room
-                    });
-                    break;
-            }
-            
-        })
+            })
+        } catch { console.error("mongoDB connection error") }
     }
 }
 

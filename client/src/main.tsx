@@ -9,6 +9,7 @@ import LoginLogoutButton from './page/login';
 
 import CreateRoomForm from './page/CRoom';
 import GptQuiz from './page/quizGptPage';
+import AttQuiz from './page/attQuizPage';
 const router = createBrowserRouter([
   {
     path: "/play/quiz/:roomId",
@@ -29,12 +30,16 @@ const router = createBrowserRouter([
     path: "/gptQuiz/:lectureNoteID",
     element: <GptQuiz/>,
   },
+  {
+    path: "/attendanceQuiz/:quizID",
+    element: <AttQuiz/>,
+  },
 ]);
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
-  <React.StrictMode>
+
     <AnimatePresence mode="wait">
       <RouterProvider router={router} />
     </AnimatePresence>
-  </React.StrictMode>
+ 
 )
