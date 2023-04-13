@@ -27,15 +27,14 @@ import Typography from "@mui/material/Typography";
 import { handleLogin, handleLogout, getUserData } from '../../../server/controllers/loginFunction';
 import { userProfile } from "../state";
 import _ from 'lodash'
-import { color } from 'framer-motion';
 
 const useStyles = makeStyles()((theme) => {
     return {
         root: {
             display: 'flex',
-            flexDirection: 'column',
             alignItems: 'center',
-            marginTop: '5%',
+            justifyContent: 'center',
+            marginTop: '10vh',
         }
         ,
         textField: {
@@ -117,7 +116,7 @@ const EnterRoomId = () => {
                 position: 'absolute',
                 width: '100vw',
                 height: '100vh',
-                background: 'linear-gradient(173.45deg, rgba(52, 154, 227, 0) 81.79%, #5AC4F1 81.79%, #49AEF7 81.79%), linear-gradient(205.79deg, rgba(254, 196, 82, 0.973958) 15.18%, #FFCA7B 15.18%, rgba(249, 199, 100, 0.842152) 15.5%, rgba(217, 217, 217, 0) 15.51%)'
+                background: 'linear-gradient(173.45deg, rgba(52, 154, 227, 0) 81.79%, #5AC4F1 81.79%, #49AEF7 81.79%), linear-gradient(205.79deg, rgba(254, 196, 82, 0.973958) 15.18%, #FFCA7B 15.18%, rgba(249, 199, 100, 0.842152) 15.5%, rgba(217, 217, 217, 0) 15.51%)',
             }}>
                 <header>
                     <AppBar position="static" sx={{
@@ -186,11 +185,10 @@ const EnterRoomId = () => {
                         )
                         }
                     </Col> */}
-                        <Col md={8} xs={12}>
+                        <Col md={8} xs={12} sx={{display:"flex", justifyContent: "space-between", flexDirection: "column"}}>
                             <List
                                 sx={{
                                     borderRadius: '5px',
-                                    /*'&::-webkit-scrollbar':{}, may not do*/
                                     width: '35vw',
                                     bgcolor: 'rgba(255, 255, 255,0.8)',
                                     overflow: 'auto',
@@ -223,31 +221,33 @@ const EnterRoomId = () => {
                                     backgroundColor: 'rgba(244, 244, 244, 0.85)',
                                     boxShadow: ' 0px 4px 4px rgba(0, 0, 0, 0.05)',
                                     width: '35vw',
-                                    height: '23vh',
+                                    height: '20vh',
                                     borderRadius: 5,
                                     paddingTop: 3,
                                     paddingBottom: 3,
-                                    paddingLeft: 3, paddingRight: 3
+                                    paddingLeft: 3, paddingRight: 3,
                                 }}>
-                                <Grid container spacing={2}>
-                                    <Grid item xs={12} md={6}>
+                                <Grid container spacing={2} >
+                                    <Grid item sm={12} md={6} lg={6}>
                                         <Button
                                             variant="contained"
                                             style={{ backgroundColor: 'rgba(255, 164, 27, 0.76)' }}
                                             sx={{ height:"100%", width:"100%" }}
                                             startIcon={<MeetingRoomIcon />}
+                                            onClick={() => navigate("/CRoom")}
                                         >
                                             Create Room
                                         </Button>
                                     </Grid>
-                                    <Grid item xs={12} sm={6} sx={{ display:"flex", justifyContent: "space-between", flexDirection: "column"}}>
+                                    <Grid item sm={12} md={6} lg={6} sx={{ display:"flex", justifyContent: "space-between", flexDirection: "column"}}>
                                         <TextField
                                             label="Room ID"
-                                            sx={{ width: '100%', height: '45%', backgroundColor: '#FCFCFC', borderRadius: '4px 4px 0 0'}}
+                                            size="medium"
+                                            //sx={{ width: '100%', height: '45%', borderRadius: '4px 4px 0 0'}}
                                             fullWidth={true}
                                             value={roomId}
                                             onChange={e => setRoomId(e.target.value)}
-                                            className={classes.textField}
+                                            //className={classes.textField}
                                         />
                                         <Button
                                             variant="contained"
@@ -263,14 +263,14 @@ const EnterRoomId = () => {
                                 </Grid>
                             </Grid>
                         </Col>
-                        <Col md={3} xs={12}>
+                        <Col md={4} xs={12}>
                             <Grid container
                                 sx={{
                                     borderRadius: '15px ',
                                     border: '1px outset LightSlateGray ',
                                     boxShadow: '0px 0px 10px rgba(183, 183, 183, 0.5)',
                                     width: '20vw',
-                                    height: '70vh',
+                                    height: '69vh',
                                     marginLeft: '7.5%',
                                 }}>
                                 <Grid item xs={12} style={{ borderTopLeftRadius: '15px ', borderTopRightRadius: '15px ', boxShadow: '0px 4px 4px rgba(130, 130, 130, 0.25)', backgroundColor: 'rgba(52, 154, 227, 0.8)', height: '15%' }}>
